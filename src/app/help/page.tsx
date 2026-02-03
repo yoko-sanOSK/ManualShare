@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Settings, FilePlus, Layers, Edit3, Save, Layout, Sparkles, Type, Upload, Image as ImageIcon, Film } from "lucide-react";
+import { Settings, FilePlus, Layers, Edit3, Save, Layout, Sparkles, Type, Upload, Image as ImageIcon, Film, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function HelpCenterPage() {
@@ -21,98 +21,96 @@ export default function HelpCenterPage() {
 
           <main className="p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-headline font-bold mb-4">ManualMaster 管理ガイド</h2>
+              <h2 className="text-3xl font-headline font-bold mb-4">ManualMaster ガイド</h2>
               <p className="text-muted-foreground">
-                リッチテキストエディタとメディア（画像・動画）アップロード機能を活用したマニュアル管理のガイドです。
+                AIを活用した要約機能と、リッチテキストエディタによる高度なマニュアル管理のガイドです。
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <Card className="bg-primary/5 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-primary text-base">
-                    <Type className="w-5 h-5" />
-                    リッチテキスト
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm">
-                  見出し、太字、リストなどで分かりやすい構造を作成できます。
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               <Card className="bg-secondary/5 border-secondary/20">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-secondary text-base">
-                    <ImageIcon className="w-5 h-5" />
-                    画像挿入
+                  <CardTitle className="flex items-center gap-2 text-secondary text-base font-bold">
+                    <Sparkles className="w-5 h-5 fill-secondary" />
+                    AI インテリジェント要約
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm">
-                  PCの画像を本文に埋め込めます。自動で中央に配置されます。
+                <CardContent className="text-sm leading-relaxed text-muted-foreground">
+                  AIがマニュアルの内容を解析し、重要なポイントを自動で抽出します。長文を読む時間がない時でも、一瞬で要点を把握できます。
                 </CardContent>
               </Card>
-              <Card className="bg-accent/5 border-accent/20">
+              <Card className="bg-primary/5 border-primary/20">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-accent text-base">
-                    <Film className="w-5 h-5" />
-                    動画埋め込み
+                  <CardTitle className="flex items-center gap-2 text-primary text-base font-bold">
+                    <Layout className="w-5 h-5" />
+                    マルチメディア・エディタ
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm">
-                  MP4ファイルを直接本文に埋め込み、再生させることができます。
+                <CardContent className="text-sm leading-relaxed text-muted-foreground">
+                  画像や動画を直接埋め込むことができ、視覚的に分かりやすいマニュアルを作成できます。
                 </CardContent>
               </Card>
             </div>
 
-            <Accordion type="single" collapsible className="w-full bg-card rounded-xl border p-4">
+            <Accordion type="single" collapsible className="w-full bg-card rounded-xl border p-4 shadow-sm">
+              <AccordionItem value="ai-feature">
+                <AccordionTrigger className="font-headline font-bold text-lg">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-secondary fill-secondary" />
+                    AI要約機能について
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-2 text-muted-foreground">
+                  <p>
+                    ManualMasterのAI要約は、単なる文章の短縮ではありません。以下のステップで高度な処理を行っています。
+                  </p>
+                  <ul className="space-y-3 pl-4 list-disc text-sm">
+                    <li><span className="font-bold text-foreground">文脈理解:</span> マニュアルを意味のある単位に分割し、それぞれの重要性をAIが判定します。</li>
+                    <li><span className="font-bold text-foreground">ノイズ除去:</span> 冗長な表現や付随的な情報を省き、核心となる指示や情報にフォーカスします。</li>
+                    <li><span className="font-bold text-foreground">自然な日本語出力:</span> 抽出された情報を再構成し、読みやすい日本語の概要として出力します。</li>
+                  </ul>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="text-xs font-medium text-foreground mb-1">活用シーン:</p>
+                    <p className="text-xs">・現場での作業直前に、手順の要点だけを再確認したい時</p>
+                    <p className="text-xs">・膨大な資料の中から、自分に関係のある箇所を素早く見極めたい時</p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
               <AccordionItem value="item-1">
-                <AccordionTrigger className="font-headline font-bold">マニュアル記事の作成フロー</AccordionTrigger>
+                <AccordionTrigger className="font-headline font-bold">マニュアル作成の基本フロー</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
-                      <Settings className="w-4 h-4" /> 1. 設定から「マニュアル記事」を選択
+                      <Settings className="w-4 h-4" /> 1. コンテンツ管理へ移動
                     </p>
-                    <p className="text-sm pl-6">サイドバーの「設定」メニューから、コンテンツ管理画面へ移動します。</p>
+                    <p className="text-sm pl-6">サイドバーの「設定」メニューから、管理画面へ移動します。</p>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
-                      <FilePlus className="w-4 h-4" /> 2. 新規記事作成を開始
+                      <FilePlus className="w-4 h-4" /> 2. 記事作成とメディア挿入
                     </p>
-                    <p className="text-sm pl-6">「新しい記事を作成」ボタンをクリックすると、エディタが開きます。</p>
+                    <p className="text-sm pl-6">エディタのツールバーを使い、画像や動画をPCからアップロードして挿入します。</p>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
-                      <Edit3 className="w-4 h-4" /> 3. メディアの挿入
+                      <Save className="w-4 h-4" /> 3. キャンセルと保存
                     </p>
-                    <p className="text-sm pl-6">エディタのツールバーにある「画像」または「動画」アイコンをクリックし、PCからファイルを選択して挿入します。</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="font-medium text-primary flex items-center gap-2">
-                      <Save className="w-4 h-4" /> 4. 保存と公開
-                    </p>
-                    <p className="text-sm pl-6">右上の「保存して公開」ボタンを押すと、ダッシュボードに反映されます。</p>
+                    <p className="text-sm pl-6">「キャンセル」で戻るか、「保存して公開」で全社に共有します。</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger className="font-headline font-bold">動画の挿入に関する注意点</AccordionTrigger>
-                <AccordionContent className="pt-2 space-y-3">
-                  <p className="text-sm">動画ファイル（.mp4）を記事本文に直接埋め込むことができます。</p>
-                  <ul className="space-y-2 text-sm pl-4 list-disc">
-                    <li><b>推奨形式:</b> .mp4 ファイル</li>
-                    <li><b>サイズ制限:</b> Firestoreの制限により、極端に大きな動画は保存に失敗する場合があります。</li>
-                    <li><b>表示:</b> 自動的に中央揃えになり、画面幅に合わせて縮小されます。</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger className="font-headline font-bold">エディタの機能とショートカット</AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <div className="bg-muted p-3 rounded-lg text-xs font-mono space-y-1">
-                    <p>• <b>太字</b>: ボタンまたは Ctrl+B</p>
-                    <p>• <b>見出し</b>: 文章を構造化するために H1/H2 を使用します</p>
-                    <p>• <b>ツールチップ</b>: ボタンにカーソルを合わせると機能名が表示されます</p>
+                <AccordionTrigger className="font-headline font-bold">サムネイルと動画の注意点</AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3 text-sm">
+                  <div className="flex flex-col gap-2">
+                    <p className="font-bold text-foreground">・サムネイル:</p>
+                    <p>設定しない場合は「ManualMaster」のロゴが自動で表示されます。記事を識別しやすくするために設定を推奨します。</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <p className="font-bold text-foreground">・動画ファイル:</p>
+                    <p>MP4形式をサポートしています。ストレージに直接アップロードされるため、1MBを超えるファイルも扱えます。</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
