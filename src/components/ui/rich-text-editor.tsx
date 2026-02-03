@@ -1,10 +1,9 @@
 
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Node, mergeAttributes } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TiptapImage from "@tiptap/extension-image";
-import Youtube from "@tiptap/extension-youtube";
 import { Button } from "@/components/ui/button";
 import { 
   Bold, 
@@ -18,7 +17,7 @@ import {
   Redo,
   Code,
   Image as ImageIcon,
-  Youtube as YoutubeIcon,
+  Film,
   X
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -29,6 +28,56 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// カスタム動画ノードの定義
+const Video = Node.create({
+  name: 'video',
+  group: 'block',
+  selectable: true,
+  draggable: true,
+  atom: true,
+
+  addAttributes() {
+    return {
+      src: {
+        default: null,
+      },
+      controls: {
+        default: true,
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'video',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      'video',
+      mergeAttributes(HTMLAttributes, {
+        class: 'mx-auto block rounded-lg shadow-md max-w-full my-6 focus:outline-none focus:ring-2 focus:ring-primary',
+        playsinline: 'true',
+        preload: 'metadata',
+      }),
+    ];
+  },
+
+  addCommands() {
+    return {
+      setVideo: (options: { src: string }) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    } as any;
+  },
+});
+
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -37,6 +86,7 @@ interface RichTextEditorProps {
 
 const MenuBar = ({ editor }: { editor: any }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   if (!editor) return null;
 
@@ -57,15 +107,22 @@ const MenuBar = ({ editor }: { editor: any }) => {
     e.target.value = '';
   };
 
-  const addYoutubeVideo = () => {
-    const url = prompt('YouTubeのURLを入力してください');
-    if (url) {
-      editor.commands.setYoutubeVideo({
-        src: url,
-        width: 640,
-        height: 480,
-      });
+  const addVideo = () => {
+    videoInputRef.current?.click();
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Firestoreのドキュメント制限(1MB)を考慮し、プロトタイプとして警告を出すか検討
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const url = event.target?.result as string;
+        editor.chain().focus().setVideo({ src: url }).run();
+      };
+      reader.readAsDataURL(file);
     }
+    e.target.value = '';
   };
 
   const items = [
@@ -127,10 +184,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
       isActive: () => editor.isActive("image"),
     },
     {
-      icon: <YoutubeIcon className="h-4 w-4" />,
-      title: "YouTube動画を挿入",
-      action: addYoutubeVideo,
-      isActive: () => editor.isActive("youtube"),
+      icon: <Film className="h-4 w-4" />,
+      title: "動画ファイルを挿入 (.mp4)",
+      action: addVideo,
+      isActive: () => editor.isActive("video"),
     },
     { type: "divider" },
     {
@@ -156,6 +213,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
           ref={fileInputRef}
           className="hidden"
           onChange={handleImageFileChange}
+        />
+        <input
+          type="file"
+          accept="video/mp4"
+          ref={videoInputRef}
+          className="hidden"
+          onChange={handleVideoFileChange}
         />
         {items.map((item, index) => {
           if (item.type === "divider") {
@@ -206,12 +270,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           class: 'mx-auto block rounded-lg shadow-md max-w-full h-auto my-6',
         },
       }),
-      Youtube.configure({
-        HTMLAttributes: {
-          class: 'mx-auto block rounded-lg shadow-md max-w-full aspect-video my-6',
-        },
-        inline: false,
-      }),
+      Video,
     ],
     content: content,
     editorProps: {
