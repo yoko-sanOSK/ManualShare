@@ -63,7 +63,7 @@ const Video = Node.create({
     return [
       'video',
       mergeAttributes(HTMLAttributes, {
-        class: 'mx-auto block rounded-lg shadow-md max-w-full my-6 focus:outline-none focus:ring-2 focus:ring-primary',
+        class: 'mx-auto block rounded-lg shadow-md max-w-full h-auto my-6 focus:outline-none focus:ring-2 focus:ring-primary',
         playsinline: 'true',
         preload: 'metadata',
       }),
@@ -268,7 +268,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                   disabled={item.disabled?.()}
                   className={cn(
                     "transition-all duration-200",
-                    active && "bg-primary/20 text-primary shadow-[0_0_12px_rgba(var(--primary),0.4)] ring-1 ring-primary/30 hover:bg-primary/30"
+                    active && "bg-secondary/20 text-secondary-foreground font-bold shadow-[0_0_15px_rgba(122,163,122,0.4)] ring-1 ring-secondary/40 hover:bg-secondary/30"
                   )}
                 >
                   {item.icon}
