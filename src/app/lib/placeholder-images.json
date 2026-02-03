@@ -1,0 +1,29 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "it-manual",
+      "description": "Information Technology Manual",
+      "imageUrl": "https://picsum.photos/seed/it-manual/600/400",
+      "imageHint": "technology computer"
+    },
+    {
+      "id": "hr-manual",
+      "description": "Human Resources Manual",
+      "imageUrl": "https://picsum.photos/seed/hr-manual/600/400",
+      "imageHint": "office people"
+    },
+    {
+      "id": "sales-manual",
+      "description": "Sales Strategy Manual",
+      "imageUrl": "https://picsum.photos/seed/sales-manual/600/400",
+      "imageHint": "sales business"
+    },
+    {
+      "id": "ops-manual",
+      "description": "Operations Manual",
+      "imageUrl": "https://picsum.photos/seed/ops-manual/600/400",
+      "imageHint": "logistics warehouse"
+    }
+  ]
+}
