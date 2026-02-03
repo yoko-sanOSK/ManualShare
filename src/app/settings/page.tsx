@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Image as ImageIcon, Layout, Save, X, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Image as ImageIcon, Layout, Save, X, Upload, Loader2, Globe } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,6 +57,7 @@ export default function SettingsPage() {
     description: string;
     imageUrl?: string;
     status?: 'draft' | 'published';
+    visibility?: 'all' | 'department' | 'restricted';
   } | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,6 +134,7 @@ export default function SettingsPage() {
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString().split('T')[0],
       status: editingManual.status || 'published',
+      visibility: editingManual.visibility || 'all',
     };
 
     setDocumentNonBlocking(manualDocRef, data, { merge: true });
@@ -152,6 +154,15 @@ export default function SettingsPage() {
   };
 
   if (!mounted) return null;
+
+  const getVisibilityLabel = (val?: string) => {
+    switch(val) {
+      case 'all': return '全社公開';
+      case 'department': return '部署限定';
+      case 'restricted': return '閲覧制限あり';
+      default: return '全社公開';
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -197,7 +208,7 @@ export default function SettingsPage() {
                   <Button 
                     size="lg"
                     onClick={() => {
-                      setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", status: 'published', imageUrl: "" });
+                      setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", status: 'published', imageUrl: "", visibility: 'all' });
                       setIsManualDialogOpen(true);
                     }} 
                     disabled={!categories || categories.length === 0}
@@ -234,6 +245,9 @@ export default function SettingsPage() {
                                 <h4 className="font-bold truncate text-lg">{manual.title}</h4>
                                 <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10">
                                   {manual.categoryName}
+                                </Badge>
+                                <Badge variant="outline" className="text-[10px] h-5">
+                                  {getVisibilityLabel(manual.visibility)}
                                 </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
@@ -423,6 +437,25 @@ export default function SettingsPage() {
                           {categories?.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                           ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="man-visibility" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Globe className="w-3 h-3" /> 公開範囲
+                      </Label>
+                      <Select 
+                        value={editingManual?.visibility || 'all'} 
+                        onValueChange={(val) => setEditingManual(prev => ({ ...prev!, visibility: val as any }))}
+                      >
+                        <SelectTrigger id="man-visibility" className="bg-muted/30 border-none h-10">
+                          <SelectValue placeholder="公開範囲を選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">全社公開</SelectItem>
+                          <SelectItem value="department">部署限定</SelectItem>
+                          <SelectItem value="restricted">閲覧制限あり</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

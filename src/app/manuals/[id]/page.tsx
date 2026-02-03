@@ -10,7 +10,7 @@ import { AISummaryCard } from "@/components/manual/ai-summary-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Calendar, User, Share2, Printer, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, User, Share2, Printer, Loader2, AlertCircle, Globe } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -19,8 +19,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const firestore = useFirestore();
 
-  // インデックス不要で確実に取得するため、collectionGroupで全取得してフロントでフィルタリング
-  // (MVP規模であればこの方法が最も確実)
   const allManualsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collectionGroup(firestore, "manuals");
@@ -33,7 +31,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
     return manuals.find(m => m.id === id) || null;
   }, [manuals, id]);
 
-  // デフォルトロゴ画像URL
   const defaultImageUrl = "https://placehold.co/800x400/6fa8dc/ffffff?text=ManualMaster";
 
   if (isLoading) {
@@ -69,6 +66,15 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
   if (!manual && !isLoading && manuals) {
     notFound();
   }
+
+  const getVisibilityLabel = (val?: string) => {
+    switch(val) {
+      case 'all': return '全社公開';
+      case 'department': return '部署限定';
+      case 'restricted': return '閲覧制限あり';
+      default: return '全社公開';
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -107,7 +113,12 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
-                <Badge className="bg-primary text-white mb-2">{manual?.categoryName}</Badge>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-primary text-white">{manual?.categoryName}</Badge>
+                  <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm">
+                    {getVisibilityLabel(manual?.visibility)}
+                  </Badge>
+                </div>
                 <h1 className="text-3xl md:text-4xl font-headline font-bold text-white leading-tight">
                   {manual?.title}
                 </h1>
@@ -140,15 +151,20 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                   <AISummaryCard manualText={manual?.content || ""} />
                   
                   <div className="mt-8 p-6 bg-card rounded-xl shadow-sm border">
-                    <h3 className="font-headline font-bold text-lg mb-4">マニュアル詳細</h3>
+                    <h3 className="font-headline font-bold text-lg mb-4 text-foreground flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-primary" />
+                      マニュアル詳細
+                    </h3>
                     <ul className="space-y-3 text-sm">
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">カテゴリー</span>
-                        <span className="font-medium">{manual?.categoryName}</span>
+                        <span className="font-medium text-foreground">{manual?.categoryName}</span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">公開範囲</span>
-                        <span className="font-medium text-secondary">全社公開</span>
+                        <Badge variant="secondary" className="font-medium">
+                          {getVisibilityLabel(manual?.visibility)}
+                        </Badge>
                       </li>
                     </ul>
                   </div>
