@@ -4,12 +4,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { MOCK_MANUALS, CATEGORIES } from "@/lib/mock-data";
 import { ManualCard } from "@/components/manual/manual-card";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, BookOpen } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, collectionGroup } from "firebase/firestore";
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -18,18 +19,29 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
 
+  const firestore = useFirestore();
+  
+  // カテゴリーの取得
+  const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
+  const { data: categories } = useCollection(categoriesRef);
+
+  // 全マニュアルの取得 (collectionGroupを使用)
+  const manualsRef = useMemoFirebase(() => collectionGroup(firestore, "manuals"), [firestore]);
+  const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
+
   useEffect(() => {
     setActiveCategory(searchParams.get("category"));
   }, [searchParams]);
 
   const filteredManuals = useMemo(() => {
-    return MOCK_MANUALS.filter((manual) => {
-      const matchesSearch = manual.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          manual.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = activeCategory ? manual.category === activeCategory : true;
+    if (!manuals) return [];
+    return manuals.filter((manual) => {
+      const matchesSearch = manual.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          manual.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = activeCategory ? manual.categoryName === activeCategory : true;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, manuals]);
 
   return (
     <SidebarProvider>
@@ -75,23 +87,29 @@ export default function Home() {
                 >
                   すべて
                 </Badge>
-                {CATEGORIES.map((cat) => (
+                {categories?.map((cat) => (
                   <Badge
-                    key={cat}
-                    variant={activeCategory === cat ? "default" : "outline"}
-                    className={`cursor-pointer h-7 px-3 ${activeCategory === cat ? "bg-primary" : "hover:border-primary/50"}`}
-                    onClick={() => setActiveCategory(cat)}
+                    key={cat.id}
+                    variant={activeCategory === cat.name ? "default" : "outline"}
+                    className={`cursor-pointer h-7 px-3 ${activeCategory === cat.name ? "bg-primary" : "hover:border-primary/50"}`}
+                    onClick={() => setActiveCategory(cat.name)}
                   >
-                    {cat}
+                    {cat.name}
                   </Badge>
                 ))}
               </div>
             </div>
 
-            {filteredManuals.length > 0 ? (
+            {manualsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-64 bg-muted animate-pulse rounded-xl" />
+                ))}
+              </div>
+            ) : filteredManuals.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredManuals.map((manual) => (
-                  <ManualCard key={manual.id} manual={manual} />
+                  <ManualCard key={manual.id} manual={manual as any} />
                 ))}
               </div>
             ) : (

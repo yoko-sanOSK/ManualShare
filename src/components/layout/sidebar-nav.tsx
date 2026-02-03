@@ -1,7 +1,8 @@
 
 "use client";
 
-import { CATEGORIES, ManualCategory } from "@/lib/mock-data";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -14,20 +15,15 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, Settings, HelpCircle, Laptop, Users, TrendingUp, Package, Wallet } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, HelpCircle, Laptop, Users, TrendingUp, Package, Wallet, Tag } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const CATEGORY_ICONS: Record<ManualCategory, any> = {
-  IT: Laptop,
-  '人事': Users,
-  '営業': TrendingUp,
-  '運用': Package,
-  '財務': Wallet,
-};
-
 export function SidebarNav() {
   const pathname = usePathname();
+  const firestore = useFirestore();
+  const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
+  const { data: categories } = useCollection(categoriesRef);
 
   return (
     <Sidebar variant="sidebar" className="border-r border-border/50">
@@ -66,39 +62,43 @@ export function SidebarNav() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {CATEGORIES.map((category) => {
-                const Icon = CATEGORY_ICONS[category];
-                return (
-                  <SidebarMenuItem key={category}>
-                    <SidebarMenuButton asChild>
-                      <Link href={`/?category=${category}`}>
-                        <Icon />
-                        <span>{category} マニュアル</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {categories?.map((category) => (
+                <SidebarMenuItem key={category.id}>
+                  <SidebarMenuButton asChild isActive={pathname === "/" && new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('category') === category.name}>
+                    <Link href={`/?category=${category.name}`}>
+                      <Tag />
+                      <span>{category.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              {(!categories || categories.length === 0) && (
+                <p className="px-4 text-xs text-muted-foreground italic">カテゴリーなし</p>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup className="mt-auto">
           <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            サポート
+            システム
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Settings />
-                  <span>設定</span>
+                <SidebarMenuButton asChild isActive={pathname === "/settings"}>
+                  <Link href="/settings">
+                    <Settings />
+                    <span>設定</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <HelpCircle />
-                  <span>ヘルプセンター</span>
+                <SidebarMenuButton asChild isActive={pathname === "/help"}>
+                  <Link href="/help">
+                    <HelpCircle />
+                    <span>ヘルプセンター</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
