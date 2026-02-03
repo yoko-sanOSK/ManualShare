@@ -5,9 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Footer } from "@/components/layout/footer";
-import { useCollection, useFirestore, useMemoFirebase, useFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, collectionGroup, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,10 +22,10 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { verifyAdminPassword } from "@/app/actions/admin-auth";
+import { uploadFileAction } from "@/app/actions/upload-action";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
-  const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -42,13 +41,13 @@ export default function SettingsPage() {
     setMounted(true);
   }, []);
   
-  const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
+  const categoriesRef = useMemoFirebase(() => collection(firestore!, "categories"), [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
-  const visibilitiesRef = useMemoFirebase(() => collection(firestore, "visibility_options"), [firestore]);
+  const visibilitiesRef = useMemoFirebase(() => collection(firestore!, "visibility_options"), [firestore]);
   const { data: visibilities } = useCollection(visibilitiesRef);
 
-  const manualsRef = useMemoFirebase(() => collectionGroup(firestore, "manuals"), [firestore]);
+  const manualsRef = useMemoFirebase(() => collectionGroup(firestore!, "manuals"), [firestore]);
   const { data: manuals } = useCollection(manualsRef);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -71,54 +70,55 @@ export default function SettingsPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-
     const success = await verifyAdminPassword(passwordInput);
     if (success) {
       setIsAuthenticated(true);
     } else {
-      toast({
-        title: "認証失敗",
-        description: "パスワードが正しくありません。",
-        variant: "destructive",
-      });
+      toast({ title: "認証失敗", description: "パスワードが正しくありません。", variant: "destructive" });
     }
     setIsVerifying(false);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !storage) return;
+    if (!file) return;
 
     setIsUploading(true);
     try {
-      const storageRef = ref(storage, `manuals/covers/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      setEditingManual(prev => ({ ...prev!, imageUrl: url }));
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const result = await uploadFileAction(formData, 'manuals/covers');
+      
+      if ('error' in result) {
+        throw new Error(result.error);
+      }
+
+      setEditingManual(prev => ({ ...prev!, imageUrl: result.url }));
       toast({ title: "完了", description: "サムネイルを更新しました。" });
-    } catch (error) {
-      toast({ title: "失敗", description: "アップロードに失敗しました。", variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "失敗", description: error.message || "アップロードに失敗しました。", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleSaveCategory = () => {
-    if (!editingCategory?.name) return;
-    const id = editingCategory.id || doc(categoriesRef).id;
+    if (!editingCategory?.name || !firestore) return;
+    const id = editingCategory.id || doc(categoriesRef!).id;
     setDocumentNonBlocking(doc(firestore, "categories", id), { id, ...editingCategory }, { merge: true });
     setIsCategoryDialogOpen(false);
   };
 
   const handleSaveVisibility = () => {
-    if (!editingVisibility?.name) return;
-    const id = editingVisibility.id || doc(visibilitiesRef).id;
+    if (!editingVisibility?.name || !firestore) return;
+    const id = editingVisibility.id || doc(visibilitiesRef!).id;
     setDocumentNonBlocking(doc(firestore, "visibility_options", id), { id, ...editingVisibility }, { merge: true });
     setIsVisibilityDialogOpen(false);
   };
 
   const handleSaveManual = () => {
-    if (!editingManual?.title || !editingManual?.categoryId) return;
+    if (!editingManual?.title || !editingManual?.categoryId || !firestore) return;
     
     const category = categories?.find(c => c.id === editingManual.categoryId);
     const visibility = visibilities?.find(v => v.id === editingManual.visibilityId);
@@ -161,15 +161,7 @@ export default function SettingsPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="password">パスワード</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={passwordInput}
-                        onChange={(e) => setPasswordInput(e.target.value)}
-                        placeholder="管理者パスワード"
-                        required
-                        autoFocus
-                      />
+                      <Input id="password" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="管理者パスワード" required autoFocus />
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -204,23 +196,15 @@ export default function SettingsPage() {
 
             <Tabs defaultValue="manuals" className="space-y-6">
               <TabsList className="bg-muted/50 p-1">
-                <TabsTrigger value="manuals" className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" /> マニュアル記事
-                </TabsTrigger>
-                <TabsTrigger value="categories" className="flex items-center gap-2">
-                  <Tag className="w-4 h-4" /> カテゴリー
-                </TabsTrigger>
-                <TabsTrigger value="visibility" className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" /> 公開範囲
-                </TabsTrigger>
+                <TabsTrigger value="manuals" className="flex items-center gap-2"><FileText className="w-4 h-4" /> マニュアル記事</TabsTrigger>
+                <TabsTrigger value="categories" className="flex items-center gap-2"><Tag className="w-4 h-4" /> カテゴリー</TabsTrigger>
+                <TabsTrigger value="visibility" className="flex items-center gap-2"><FileText className="w-4 h-4" /> 公開範囲</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manuals" className="space-y-6">
                 <div className="flex items-center justify-between bg-card p-6 rounded-xl border shadow-sm">
                   <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 p-3 rounded-xl text-primary">
-                      <Layout className="w-6 h-6" />
-                    </div>
+                    <div className="bg-primary/10 p-3 rounded-xl text-primary"><Layout className="w-6 h-6" /></div>
                     <div>
                       <h3 className="text-lg font-bold">記事一覧</h3>
                       <p className="text-sm text-muted-foreground">{manuals?.length || 0} 件登録済み</p>
@@ -253,7 +237,7 @@ export default function SettingsPage() {
                           <Button variant="ghost" size="icon" onClick={() => { setEditingManual(manual as any); setIsManualDialogOpen(true); }}>
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore, `categories/${manual.categoryId}/manuals/${manual.id}`))}>
+                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => firestore && deleteDocumentNonBlocking(doc(firestore, `categories/${manual.categoryId}/manuals/${manual.id}`))}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -280,7 +264,7 @@ export default function SettingsPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingCategory(cat); setIsCategoryDialogOpen(true); }}>
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore, "categories", cat.id))}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => firestore && deleteDocumentNonBlocking(doc(firestore, "categories", cat.id))}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
@@ -304,15 +288,12 @@ export default function SettingsPage() {
                     <Card key={vis.id}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-primary" />
-                            {vis.name}
-                          </div>
+                          <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-primary" />{vis.name}</div>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingVisibility(vis); setIsVisibilityDialogOpen(true); }}>
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore, "visibility_options", vis.id))}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => firestore && deleteDocumentNonBlocking(doc(firestore, "visibility_options", vis.id))}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
@@ -337,9 +318,7 @@ export default function SettingsPage() {
             <Label>説明</Label>
             <Textarea value={editingCategory?.description || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, description: e.target.value }))} />
           </div>
-          <DialogFooter>
-            <Button onClick={handleSaveCategory} className="font-bold">保存</Button>
-          </DialogFooter>
+          <DialogFooter><Button onClick={handleSaveCategory} className="font-bold">保存</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -350,9 +329,7 @@ export default function SettingsPage() {
             <Label>範囲名</Label>
             <Input value={editingVisibility?.name || ""} placeholder="例: 全社公開, 役員限定" onChange={(e) => setEditingVisibility(prev => ({ ...prev!, name: e.target.value }))} />
           </div>
-          <DialogFooter>
-            <Button onClick={handleSaveVisibility} className="font-bold">保存</Button>
-          </DialogFooter>
+          <DialogFooter><Button onClick={handleSaveVisibility} className="font-bold">保存</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -376,7 +353,6 @@ export default function SettingsPage() {
               <div className="col-span-1 space-y-4">
                 <Card className="p-4 space-y-4">
                   <Label>カテゴリー</Label>
-                  <span className="text-xs text-muted-foreground block mt-1">※カテゴリーを先に作成してください</span>
                   <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>

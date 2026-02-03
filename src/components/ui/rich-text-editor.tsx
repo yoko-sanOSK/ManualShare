@@ -27,10 +27,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useFirebase } from "@/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { uploadFileAction } from "@/app/actions/upload-action";
 
 // カスタム動画ノードの定義
 const Video = Node.create({
@@ -91,36 +90,38 @@ interface RichTextEditorProps {
 const MenuBar = ({ editor }: { editor: any }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const { storage } = useFirebase();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
   if (!editor) return null;
 
   const handleFileUpload = async (file: File, type: 'image' | 'video') => {
-    if (!storage) return;
-    
     setIsUploading(true);
     try {
-      const storageRef = ref(storage, `manuals/media/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const result = await uploadFileAction(formData, 'manuals/media');
+      
+      if ('error' in result) {
+        throw new Error(result.error);
+      }
       
       if (type === 'image') {
-        editor.chain().focus().setImage({ src: url }).run();
+        editor.chain().focus().setImage({ src: result.url }).run();
       } else {
-        editor.chain().focus().setVideo({ src: url }).run();
+        editor.chain().focus().setVideo({ src: result.url }).run();
       }
       
       toast({
         title: "アップロード完了",
         description: "メディアを挿入しました。",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error);
       toast({
         title: "アップロード失敗",
-        description: "ファイルのアップロード中にエラーが発生しました。",
+        description: error.message || "ファイルのアップロード中にエラーが発生しました。",
         variant: "destructive",
       });
     } finally {
