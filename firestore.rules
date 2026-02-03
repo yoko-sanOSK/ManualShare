@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset implements a Public-Read, Protected-Write model for a knowledge base application. 
+     * While manuals and help articles are accessible to all users for reading, write operations 
+     * are restricted to ensure data integrity and prepare for a robust authorization model.
+     *
+     * DATA STRUCTURE
+     * - /categories/{categoryId}: Root collection for manual categories.
+     * - /categories/{categoryId}/manuals/{manualId}: Subcollection storing manuals, nested under 
+     *   their respective categories to enforce the 1:N relationship.
+     * - /help_center_articles/{articleId}: Top-level collection for application guidance.
+     *
+     * KEY SECURITY DECISIONS
+     * - Public Read Access: All collections allow 'get' and 'list' for all users (including 
+     *   unauthenticated) to facilitate search and manual consumption.
+     * - Write Protection: Currently, write operations (create, update, delete) are restricted 
+     *   because the current data schema lacks explicit ownership fields (e.g., 'authorId' or 
+     *   'ownerId'). 
+     * - Relational Integrity: Rules are prepared to enforce that manual documents correctly 
+     *   reference their parent category IDs to prevent orphaned or misplaced data.
+     *
+     * DENORMALIZATION FOR AUTHORIZATION
+     * - To enable secure, performant writes in the future, it is recommended to add an 
+     *   'authorId' or 'ownerId' field to the Category, Manual, and HelpCenterArticle entities. 
+     *   This will allow the rules to perform fast ownership checks without additional lookups.
+     */
+
+    /** 
+     * Global helper functions for clarity and reuse.
+     */
+
+    /**
+     * @description Rules for managing manual categories.
+     * @path /categories/{categoryId}
+     * @allow (get, list) Any user, including guests.
+     * @deny (create, update, delete) Any user, pending schema update for ownership.
+     * @principle Public access for reading; restricted writes due to missing ownership context.
+     */
+    match /categories/{categoryId} {
+      allow get, list: if true;
+      
+      // CRITICAL: Cannot implement owner-only writes. The 'Category' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      
+      /**
+       * @description Rules for manuals belonging to a specific category.
+       * @path /categories/{categoryId}/manuals/{manualId}
+       * @allow (get, list) Any user, including guests.
+       * @deny (create) If the internal categoryId doesn't match the parent path.
+       * @principle Ensures hierarchical integrity and public availability of manual content.
+       */
+      match /manuals/{manualId} {
+        allow get, list: if true;
+
+        // CRITICAL: Cannot implement owner-only writes. The 'Manual' entity is missing an 'ownerId' or 'authorId' field.
+        // Once fields are added, validate consistency: 
+        // request.resource.data.id == manualId && request.resource.data.categoryId == categoryId
+        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      }
+    }
+
+    /**
+     * @description Rules for help center articles providing app guidance.
+     * @path /help_center_articles/{articleId}
+     * @allow (get, list) Any user, including guests.
+     * @deny (update) If attempting to modify a non-existent article.
+     * @principle Global articles are public; writes are restricted to future admin roles.
+     */
+    match /help_center_articles/{articleId} {
+      allow get, list: if true;
+
+      // CRITICAL: Cannot implement owner-only writes. The 'HelpCenterArticle' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+  }
+}

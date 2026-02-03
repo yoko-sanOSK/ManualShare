@@ -1,0 +1,170 @@
+{
+  "entities": {
+    "Manual": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Manual",
+      "type": "object",
+      "description": "Represents a manual document.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Manual entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the manual."
+        },
+        "content": {
+          "type": "string",
+          "description": "The full content of the manual (e.g., Markdown or HTML)."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Manual)"
+        },
+        "summary": {
+          "type": "string",
+          "description": "AI-generated summary of the manual content."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the manual was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the manual was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "content",
+        "categoryId"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category for organizing manuals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the category."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "HelpCenterArticle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "HelpCenterArticle",
+      "type": "object",
+      "description": "Represents an article in the help center, providing guidance on using the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the HelpCenterArticle entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the help center article."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the help center article (e.g., Markdown or HTML)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the help center article was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the help center article was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "content"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores categories for manuals. The categoryId is a unique identifier for the category.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "Unique identifier for the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}/manuals/{manualId}",
+        "definition": {
+          "entityName": "Manual",
+          "schema": {
+            "$ref": "#/backend/entities/Manual"
+          },
+          "description": "Stores manuals within a specific category. Includes the categoryId for filtering. The manualId is a unique identifier for the manual.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "Unique identifier for the category."
+            },
+            {
+              "name": "manualId",
+              "description": "Unique identifier for the manual."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/help_center_articles/{articleId}",
+        "definition": {
+          "entityName": "HelpCenterArticle",
+          "schema": {
+            "$ref": "#/backend/entities/HelpCenterArticle"
+          },
+          "description": "Stores help center articles providing guidance on using the application. The articleId is a unique identifier for the help center article.",
+          "params": [
+            {
+              "name": "articleId",
+              "description": "Unique identifier for the help center article."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the Manual Master application, focusing on managing manuals, categories, and help center articles. The structure prioritizes authorization independence and simplifies security rules.\n\n*   **Authorization Independence:** The structure uses path-based ownership for manuals and categories. HelpCenterArticles, being global, do not require specific authorization. This avoids the need for `get()` calls in security rules.\n*   **Category & Manual Relationship:** Manuals are stored in a subcollection under categories (`/categories/{categoryId}/manuals/{manualId}`). This reflects the 1:N relationship and allows efficient querying of manuals within a specific category.\n*   **QAPs Support:**\n    *   The segregation of data into separate collections (`categories`, `help_center_articles`) ensures that listing operations can be performed securely based on the collection's specific security rules. Categories and Manuals could implement role-based access control for editing/creation operations.\n    *   Path-based ownership for manuals under categories enables secure listing of manuals within a specific category.\n*   **Denormalization (Future):** While not immediately implemented, consider denormalizing category information (e.g., category name) into the manual document to avoid `get()` calls for display purposes and enhance read performance. This becomes crucial if category names are frequently displayed alongside manual entries.\n\nThis structure supports the core features of the application, including manual display, search functionality, category filtering, and AI summarization, while adhering to the principles of authorization independence and simplified security rules."
+  }
+}
