@@ -3,48 +3,62 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
-export function initializeFirebase() {
-  if (!getApps().length) {
-    // Check if we have valid config to avoid build errors
-    const hasConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
-    
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      
-      if (!hasConfig && process.env.NODE_ENV === "production") {
-        console.error("Firebase config is missing in production environment variables.");
-      }
-      
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-
-    return getSdks(firebaseApp);
-  }
-
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
+export interface FirebaseSdks {
+  firebaseApp: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
+  storage: FirebaseStorage | null;
 }
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
-    storage: getStorage(firebaseApp)
-  };
+// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+export function initializeFirebase(): FirebaseSdks {
+  const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
+  
+  // ビルド時（サーバーサイド）で設定がない場合は、初期化をスキップしてnullを返す
+  if (typeof window === 'undefined' && !hasConfig) {
+    return {
+      firebaseApp: null,
+      auth: null,
+      firestore: null,
+      storage: null
+    };
+  }
+
+  try {
+    let app: FirebaseApp;
+    if (!getApps().length) {
+      try {
+        // Firebase App Hosting環境での自動初期化を試行
+        app = initializeApp();
+      } catch (e) {
+        if (!hasConfig) {
+          throw new Error("Firebase config is missing.");
+        }
+        app = initializeApp(firebaseConfig);
+      }
+    } else {
+      app = getApp();
+    }
+
+    return {
+      firebaseApp: app,
+      auth: getAuth(app),
+      firestore: getFirestore(app),
+      storage: getStorage(app)
+    };
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+    return {
+      firebaseApp: null,
+      auth: null,
+      firestore: null,
+      storage: null
+    };
+  }
 }
 
 export * from './provider';
