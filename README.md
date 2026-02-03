@@ -24,22 +24,32 @@ npm install
 ```
 
 ### 2. 環境変数の設定
-`.env` ファイルを作成し、Firebaseコンソールから取得した設定値を入力してください（`.env.example` 参照）。
-Vercelにデプロイする場合は、Vercelの管理画面で同じ環境変数を設定してください。
+`.env` ファイルを作成し、環境変数を入力してください。Vercelにデプロイする場合は、Vercelの管理画面で同じ環境変数を設定してください。
 
 ### 3. Firebase StorageのCORS設定 (必須)
-ブラウザ（Vercel等のドメイン）からのアップロードを許可するために、以下の手順でCORS設定を行ってください。
+ブラウザ（Vercel等のドメイン）からのアップロードを許可するために、CORS設定が必要です。これは **Firebaseの管理画面からは設定できない** ため、以下のいずれかの方法で実行してください。
 
-1. [Google Cloud Console](https://console.cloud.google.com/) にアクセスし、対象のプロジェクトを選択します。
-2. 右上のターミナルアイコン（Cloud Shell）を開きます。
-3. プロジェクト内の `firebase-cors.json` の内容をコピーして、Cloud Shell上でファイルを作成します：
+#### 方法 A: Google Cloud Shell を使う (推奨・一番簡単)
+1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス。
+2. 右上のターミナルアイコン（Cloud Shell）をクリック。
+3. 以下のコマンドで設定ファイルを作成：
    ```bash
-   nano cors.json
-   # 内容を貼り付けて Ctrl+O, Enter, Ctrl+X で保存
+   echo '[{"origin": ["*"],"method": ["GET", "POST", "PUT", "DELETE", "HEAD"],"responseHeader": ["Content-Type", "x-goog-resumable"],"maxAgeSeconds": 3600}]' > cors.json
    ```
-4. 以下のコマンドを実行してバケットに適用します（`YOUR_BUCKET_NAME` は Firebase Storage の `gs://...` の部分です）：
+4. バケットに適用（`YOUR_BUCKET_NAME` は Storage の `gs://...` の部分）：
    ```bash
    gsutil cors set cors.json gs://YOUR_BUCKET_NAME
+   ```
+
+#### 方法 B: 自分のPCのターミナルから行う (SDKが必要)
+1. [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) をインストール。
+2. ログインを実行：
+   ```bash
+   gcloud auth login
+   ```
+3. プロジェクト内の `firebase-cors.json` があるディレクトリで実行：
+   ```bash
+   gsutil cors set firebase-cors.json gs://YOUR_BUCKET_NAME
    ```
 
 ## 📦 デプロイ (Vercel)
