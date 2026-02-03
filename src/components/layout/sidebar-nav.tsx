@@ -89,7 +89,7 @@ export function SidebarNav() {
                 <SidebarMenuButton asChild isActive={pathname === "/settings"}>
                   <Link href="/settings">
                     <Settings />
-                    <span>設定</span>
+                    <span>記事管理</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

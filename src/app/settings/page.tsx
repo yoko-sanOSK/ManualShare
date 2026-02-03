@@ -128,7 +128,7 @@ export default function SettingsPage() {
         <SidebarInset>
           <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
             <SidebarTrigger />
-            <h1 className="text-xl font-headline font-bold text-foreground">コンテンツ管理</h1>
+            <h1 className="text-xl font-headline font-bold text-foreground">記事管理</h1>
           </header>
 
           <main className="p-6 md:p-8 lg:p-10 max-w-6xl mx-auto w-full">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -45,9 +46,9 @@ export default function HelpCenterPage() {
                 <AccordionContent className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
-                      <Settings className="w-4 h-4" /> 1. コンテンツ管理へ移動
+                      <Settings className="w-4 h-4" /> 1. 記事管理へ移動
                     </p>
-                    <p className="text-sm pl-6">サイドバーの「設定」メニューから、管理画面へ移動します。</p>
+                    <p className="text-sm pl-6">サイドバーの「記事管理」メニューから、管理画面へ移動します。</p>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
