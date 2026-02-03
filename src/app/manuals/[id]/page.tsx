@@ -1,4 +1,3 @@
-
 "use client";
 
 import { use, useMemo } from "react";
@@ -6,7 +5,6 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collectionGroup } from "firebase/firestore";
-import { AISummaryCard } from "@/components/manual/ai-summary-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -108,7 +106,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex items-center gap-2 mb-2">
                   <Badge className="bg-primary text-white">{manual?.categoryName}</Badge>
                   <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm">
-                    {getVisibilityLabel(manual?.visibility)}
+                    {manual?.visibilityName || "全社公開"}
                   </Badge>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-headline font-bold text-white leading-tight">
@@ -140,9 +138,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
 
               <div className="space-y-6">
                 <div className="sticky top-24">
-                  <AISummaryCard manualText={manual?.content || ""} />
-                  
-                  <div className="mt-8 p-6 bg-card rounded-xl shadow-sm border">
+                  <div className="p-6 bg-card rounded-xl shadow-sm border">
                     <h3 className="font-headline font-bold text-lg mb-4 text-foreground flex items-center gap-2">
                       <Globe className="w-5 h-5 text-primary" />
                       マニュアル詳細
@@ -155,7 +151,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">公開範囲</span>
                         <Badge variant="secondary" className="font-medium">
-                          {getVisibilityLabel(manual?.visibility)}
+                          {manual?.visibilityName || "全社公開"}
                         </Badge>
                       </li>
                     </ul>
