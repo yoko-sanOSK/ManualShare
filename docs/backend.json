@@ -79,15 +79,6 @@
         "name": { "type": "string", "description": "公開範囲の表示名" }
       },
       "required": ["id", "name"]
-    },
-    "SystemConfig": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "SystemConfig",
-      "type": "object",
-      "description": "システムの共通設定を保持するエンティティ。",
-      "properties": {
-        "adminPassword": { "type": "string", "description": "管理画面アクセス用パスワード" }
-      }
     }
   },
   "auth": {
@@ -106,10 +97,6 @@
       {
         "path": "/visibility_options/{optionId}",
         "definition": { "entityName": "VisibilityOption", "schema": { "$ref": "#/backend/entities/VisibilityOption" }, "description": "公開範囲の設定オプション" }
-      },
-      {
-        "path": "/system_configs/{configId}",
-        "definition": { "entityName": "SystemConfig", "schema": { "$ref": "#/backend/entities/SystemConfig" }, "description": "システム設定" }
       }
     ]
   }
