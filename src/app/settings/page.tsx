@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // ManualMasterのロゴが中央にあるデフォルト画像URL
   const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
   useEffect(() => {
@@ -73,9 +74,9 @@ export default function SettingsPage() {
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       setEditingManual(prev => ({ ...prev!, imageUrl: url }));
-      toast({ title: "アップロード完了", description: "サムネイルを更新しました。" });
+      toast({ title: "完了", description: "サムネイルを更新しました。" });
     } catch (error) {
-      toast({ title: "アップロード失敗", variant: "destructive" });
+      toast({ title: "失敗", description: "アップロードに失敗しました。", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -290,10 +291,14 @@ export default function SettingsPage() {
       </Dialog>
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
-        <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden">
+        {/* [&>button]:hidden で右上の×ボタンを非表示にする */}
+        <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
           <div className="px-6 py-4 border-b flex justify-between items-center bg-card">
             <DialogTitle className="font-bold">記事編集</DialogTitle>
-            <Button onClick={handleSaveManual}><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setIsManualDialogOpen(false)}>キャンセル</Button>
+              <Button onClick={handleSaveManual}><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-6 bg-muted/20">
             <div className="grid grid-cols-4 gap-8">
@@ -316,9 +321,11 @@ export default function SettingsPage() {
                     <SelectContent>{visibilities?.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
                   </Select>
                   <Label>サムネイル</Label>
-                  <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer bg-muted" onClick={() => fileInputRef.current?.click()}>
                     <Image src={editingManual?.imageUrl || defaultLogoUrl} fill className="object-cover" alt="" unoptimized />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold">変更する</div>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
+                      {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : "変更する"}
+                    </div>
                   </div>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                   <Label>概要</Label>
