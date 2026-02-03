@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { useCollection, useFirestore, useMemoFirebase, useFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useFirebase, useDoc } from "@/firebase";
 import { collection, doc, collectionGroup, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Shield, Lock } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Shield, Lock, Key } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,12 +35,21 @@ export default function SettingsPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // パスワード変更用のステート
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
   const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
   useEffect(() => {
     setMounted(true);
   }, []);
   
+  // システム設定（パスワード等）の取得
+  const adminConfigRef = useMemoFirebase(() => doc(firestore, "system_configs", "admin"), [firestore]);
+  const { data: adminConfig, isLoading: isAdminConfigLoading } = useDoc(adminConfigRef);
+
   const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
@@ -70,17 +79,60 @@ export default function SettingsPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    const success = await verifyAdminPassword(passwordInput);
-    if (success) {
-      setIsAuthenticated(true);
+
+    // Firestoreに保存されたパスワードがあるか確認
+    const storedPassword = adminConfig?.adminPassword;
+
+    if (storedPassword) {
+      if (passwordInput === storedPassword) {
+        setIsAuthenticated(true);
+      } else {
+        toast({
+          title: "認証失敗",
+          description: "パスワードが正しくありません。",
+          variant: "destructive",
+        });
+      }
     } else {
-      toast({
-        title: "認証失敗",
-        description: "パスワードが正しくありません。",
-        variant: "destructive",
-      });
+      // なければ.envのパスワードをサーバーアクションで検証
+      const success = await verifyAdminPassword(passwordInput);
+      if (success) {
+        setIsAuthenticated(true);
+      } else {
+        toast({
+          title: "認証失敗",
+          description: "パスワードが正しくありません。",
+          variant: "destructive",
+        });
+      }
     }
     setIsVerifying(false);
+  };
+
+  const handleUpdatePassword = () => {
+    if (!newPassword || newPassword !== confirmPassword) {
+      toast({
+        title: "エラー",
+        description: "パスワードが一致しないか、入力されていません。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingPassword(true);
+    const configDocRef = doc(firestore, "system_configs", "admin");
+    
+    setDocumentNonBlocking(configDocRef, { adminPassword: newPassword }, { merge: true });
+    
+    setTimeout(() => {
+      setIsSavingPassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      toast({
+        title: "更新完了",
+        description: "管理画面のパスワードを更新しました。",
+      });
+    }, 500);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,11 +219,12 @@ export default function SettingsPage() {
                         placeholder="管理者パスワード"
                         required
                         autoFocus
+                        disabled={isAdminConfigLoading}
                       />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full font-bold" disabled={isVerifying}>
+                    <Button type="submit" className="w-full font-bold" disabled={isVerifying || isAdminConfigLoading}>
                       {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "ログイン"}
                     </Button>
                   </CardFooter>
@@ -197,7 +250,7 @@ export default function SettingsPage() {
           <main className="p-6 md:p-8 lg:p-10 max-w-6xl mx-auto w-full">
             <div className="mb-8">
               <h2 className="text-3xl font-headline font-bold mb-2">管理ダッシュボード</h2>
-              <p className="text-muted-foreground">記事、カテゴリー、公開範囲を自在にカスタマイズできます。</p>
+              <p className="text-muted-foreground">記事、カテゴリー、公開範囲、システム設定を自在にカスタマイズできます。</p>
             </div>
 
             <Tabs defaultValue="manuals" className="space-y-6">
@@ -210,6 +263,9 @@ export default function SettingsPage() {
                 </TabsTrigger>
                 <TabsTrigger value="visibility" className="flex items-center gap-2">
                   <Shield className="w-4 h-4" /> 公開範囲
+                </TabsTrigger>
+                <TabsTrigger value="security" className="flex items-center gap-2">
+                  <Key className="w-4 h-4" /> セキュリティ
                 </TabsTrigger>
               </TabsList>
 
@@ -319,6 +375,52 @@ export default function SettingsPage() {
                     </Card>
                   ))}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="security" className="space-y-6">
+                <Card className="max-w-2xl mx-auto shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Key className="w-5 h-5 text-primary" />
+                      管理画面パスワードの変更
+                    </CardTitle>
+                    <CardDescription>
+                      記事管理画面（この画面）にアクセスする際のパスワードを変更します。
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">新しいパスワード</Label>
+                      <Input 
+                        id="new-password" 
+                        type="password" 
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="新しいパスワードを入力"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">確認用パスワード</Label>
+                      <Input 
+                        id="confirm-password" 
+                        type="password" 
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="もう一度入力"
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end border-t pt-6">
+                    <Button 
+                      onClick={handleUpdatePassword} 
+                      disabled={isSavingPassword || !newPassword || newPassword !== confirmPassword}
+                      className="font-bold"
+                    >
+                      {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                      パスワードを保存
+                    </Button>
+                  </CardFooter>
+                </Card>
               </TabsContent>
             </Tabs>
           </main>
