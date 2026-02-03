@@ -8,7 +8,7 @@ import { collectionGroup } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Calendar, User, Loader2, AlertCircle, Globe } from "lucide-react";
+import { ArrowLeft, Calendar, User, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -65,15 +65,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
     notFound();
   }
 
-  const getVisibilityLabel = (val?: string) => {
-    switch(val) {
-      case 'all': return '全社公開';
-      case 'department': return '部署限定';
-      case 'restricted': return '閲覧制限あり';
-      default: return '全社公開';
-    }
-  };
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -91,8 +82,8 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
             </div>
           </header>
 
-          <main className="p-6 md:p-8 lg:p-12 max-w-5xl mx-auto">
-            <div className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden mb-8 shadow-lg">
+          <main className="p-6 md:p-8 lg:p-12 max-w-5xl mx-auto w-full">
+            <div className="relative h-64 md:h-96 w-full rounded-2xl overflow-hidden mb-8 shadow-lg">
               <Image
                 src={manual?.imageUrl || defaultImageUrl}
                 alt={manual?.title || "Manual"}
@@ -101,62 +92,37 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 priority
                 unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-primary text-white">{manual?.categoryName}</Badge>
-                  <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge className="bg-primary text-white text-sm py-1 px-3 shadow-sm">{manual?.categoryName}</Badge>
+                  <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm text-sm py-1 px-3 shadow-sm">
                     {manual?.visibilityName || "全社公開"}
                   </Badge>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-headline font-bold text-white leading-tight">
+                <h1 className="text-3xl md:text-5xl font-headline font-bold text-white leading-tight drop-shadow-md">
                   {manual?.title}
                 </h1>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground border-b pb-6">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>更新日: {manual?.lastUpdated || "不明"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span>作成者: 管理チーム</span>
-                  </div>
+            <div className="space-y-8">
+              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground border-b pb-6">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>更新日: {manual?.lastUpdated || "不明"}</span>
                 </div>
-
-                <div className="prose prose-blue max-w-none dark:prose-invert">
-                  <div 
-                    className="text-foreground"
-                    dangerouslySetInnerHTML={{ __html: manual?.content || "" }}
-                  />
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>作成者: 管理チーム</span>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="sticky top-24">
-                  <div className="p-6 bg-card rounded-xl shadow-sm border">
-                    <h3 className="font-headline font-bold text-lg mb-4 text-foreground flex items-center gap-2">
-                      <Globe className="w-5 h-5 text-primary" />
-                      マニュアル詳細
-                    </h3>
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">カテゴリー</span>
-                        <span className="font-medium text-foreground">{manual?.categoryName}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">公開範囲</span>
-                        <Badge variant="secondary" className="font-medium">
-                          {manual?.visibilityName || "全社公開"}
-                        </Badge>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+              <div className="prose prose-blue max-w-none dark:prose-invert">
+                <div 
+                  className="text-foreground text-lg leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: manual?.content || "" }}
+                />
               </div>
             </div>
           </main>
