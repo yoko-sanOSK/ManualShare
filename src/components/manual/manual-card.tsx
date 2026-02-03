@@ -32,6 +32,7 @@ export function ManualCard({ manual }: ManualCardProps) {
             fill
             className="object-cover transition-opacity group-hover:opacity-90"
             data-ai-hint="business manual"
+            unoptimized
           />
           <div className="absolute top-4 left-4">
             <Badge className="bg-primary hover:bg-primary/90 text-white font-medium">

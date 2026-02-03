@@ -31,7 +31,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // デフォルトロゴURL (ManualMasterロゴを中央に配置したプレースホルダー)
+  // デフォルトロゴURL
   const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
   useEffect(() => {
@@ -226,6 +226,7 @@ export default function SettingsPage() {
                                 alt="" 
                                 fill 
                                 className="object-cover" 
+                                unoptimized
                               />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -445,27 +446,17 @@ export default function SettingsPage() {
                         className="aspect-video bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
                         onClick={() => !isUploading && fileInputRef.current?.click()}
                       >
-                        {editingManual?.imageUrl ? (
-                          <>
-                            <Image 
-                              src={editingManual.imageUrl} 
-                              fill 
-                              className="object-cover group-hover:opacity-40 transition-opacity" 
-                              alt="サムネイルプレビュー" 
-                            />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 text-white font-bold text-[10px] uppercase tracking-widest">
-                              <Upload className="w-5 h-5 mb-2" />
-                              変更する
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center gap-3 text-muted-foreground group-hover:text-primary transition-colors text-center p-4">
-                            <div className="bg-background p-3 rounded-full shadow-sm border group-hover:border-primary/50 transition-all">
-                              <ImageIcon className="w-6 h-6" />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest leading-tight">画像を選択してください</span>
-                          </div>
-                        )}
+                        <Image 
+                          src={editingManual?.imageUrl || defaultLogoUrl} 
+                          fill 
+                          className="object-cover group-hover:opacity-40 transition-opacity" 
+                          alt="サムネイル" 
+                          unoptimized
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 text-white font-bold text-[10px] uppercase tracking-widest">
+                          <Upload className="w-5 h-5 mb-2" />
+                          {editingManual?.imageUrl ? "変更する" : "サムネイルを設定"}
+                        </div>
                         {isUploading && (
                           <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
                             <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
