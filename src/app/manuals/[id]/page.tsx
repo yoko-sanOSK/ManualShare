@@ -5,10 +5,11 @@ import { use, useMemo } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collectionGroup, query, where } from "firebase/firestore";
+import { collectionGroup } from "firebase/firestore";
 import { AISummaryCard } from "@/components/manual/ai-summary-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, Calendar, User, Share2, Printer, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,16 +19,21 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const firestore = useFirestore();
 
-  // collectionGroup を使用して ID で検索するクエリを安定化
-  const manualQuery = useMemoFirebase(() => {
-    if (!firestore || !id) return null;
-    return query(collectionGroup(firestore, "manuals"), where("id", "==", id));
-  }, [firestore, id]);
+  // インデックス不要で確実に取得するため、collectionGroupで全取得してフロントでフィルタリング
+  // (MVP規模であればこの方法が最も確実)
+  const allManualsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collectionGroup(firestore, "manuals");
+  }, [firestore]);
 
-  const { data: manuals, isLoading, error } = useCollection(manualQuery);
-  const manual = useMemo(() => manuals?.[0] || null, [manuals]);
+  const { data: manuals, isLoading, error } = useCollection(allManualsQuery);
+  
+  const manual = useMemo(() => {
+    if (!manuals || !id) return null;
+    return manuals.find(m => m.id === id) || null;
+  }, [manuals, id]);
 
-  // デフォルト画像URL
+  // デフォルトロゴ画像URL
   const defaultImageUrl = "https://placehold.co/800x400/6fa8dc/ffffff?text=ManualMaster";
 
   if (isLoading) {
@@ -60,7 +66,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  if (!manual && !isLoading) {
+  if (!manual && !isLoading && manuals) {
     notFound();
   }
 

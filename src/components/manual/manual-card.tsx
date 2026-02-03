@@ -19,7 +19,7 @@ interface ManualCardProps {
 }
 
 export function ManualCard({ manual }: ManualCardProps) {
-  // デフォルト画像URL
+  // デフォルト画像URL (ManualMasterロゴ入り)
   const defaultImageUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
   return (
