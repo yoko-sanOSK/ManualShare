@@ -24,7 +24,7 @@ export function Footer() {
             &copy; {year || "2024"} yoko-san. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground/60">
-            ManualMaster - インテリジェントなビジネスマニュアルプラットフォーム
+            ManualMaster - ビジネスマニュアルプラットフォーム
           </p>
         </div>
         

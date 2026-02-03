@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'マニュアルマスター',
-  description: 'インテリジェントなビジネスマニュアルプラットフォーム',
+  description: 'ビジネスマニュアルプラットフォーム',
 };
 
 export default function RootLayout({
