@@ -3,13 +3,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Manual } from "@/lib/mock-data";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ChevronRight } from "lucide-react";
 
 interface ManualCardProps {
-  manual: Manual;
+  manual: {
+    id: string;
+    title: string;
+    categoryName: string;
+    description: string;
+    lastUpdated: string;
+    imageUrl?: string;
+  };
 }
 
 export function ManualCard({ manual }: ManualCardProps) {
@@ -26,7 +32,7 @@ export function ManualCard({ manual }: ManualCardProps) {
           />
           <div className="absolute top-4 left-4">
             <Badge className="bg-primary hover:bg-primary/90 text-white font-medium">
-              {manual.category}
+              {manual.categoryName}
             </Badge>
           </div>
         </div>

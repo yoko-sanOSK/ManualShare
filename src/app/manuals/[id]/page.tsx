@@ -4,21 +4,50 @@
 import { use, useMemo } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { MOCK_MANUALS } from "@/lib/mock-data";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, collectionGroup, query, where, getDocs } from "firebase/firestore";
 import { AISummaryCard } from "@/components/manual/ai-summary-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Clock, Share2, Printer } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, Share2, Printer, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function ManualDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  
-  const manual = useMemo(() => {
-    return MOCK_MANUALS.find((m) => m.id === id);
-  }, [id]);
+  const firestore = useFirestore();
+  const [manual, setManual] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // マニュアルがネストされているため、collectionGroupを使用してIDで検索
+  useEffect(() => {
+    async function fetchManual() {
+      try {
+        const manualsRef = collectionGroup(firestore, "manuals");
+        const q = query(manualsRef, where("id", "==", id));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          setManual(querySnapshot.docs[0].data());
+        }
+      } catch (error) {
+        console.error("Error fetching manual:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchManual();
+  }, [firestore, id]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!manual) {
     notFound();
@@ -60,7 +89,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
-                <Badge className="bg-primary text-white mb-2">{manual.category}</Badge>
+                <Badge className="bg-primary text-white mb-2">{manual.categoryName}</Badge>
                 <h1 className="text-3xl md:text-4xl font-headline font-bold text-white leading-tight">
                   {manual.title}
                 </h1>
@@ -72,7 +101,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground border-b pb-6">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    <span>更新日: {manual.lastUpdated}</span>
+                    <span>更新日: {manual.lastUpdated || "不明"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4" />
@@ -86,25 +115,21 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
 
                 <div className="prose prose-blue max-w-none">
                   <div className="text-foreground leading-relaxed whitespace-pre-line text-lg">
-                    {manual.content.trim()}
+                    {manual.content?.trim()}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="sticky top-24">
-                  <AISummaryCard manualText={manual.content} />
+                  <AISummaryCard manualText={manual.content || ""} />
                   
                   <div className="mt-8 p-6 bg-white rounded-xl shadow-sm border">
                     <h3 className="font-headline font-bold text-lg mb-4">マニュアル詳細</h3>
                     <ul className="space-y-3 text-sm">
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">バージョン</span>
-                        <span className="font-medium">v1.2.0</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">部署</span>
-                        <span className="font-medium">{manual.category}</span>
+                        <span className="text-muted-foreground">カテゴリー</span>
+                        <span className="font-medium">{manual.categoryName}</span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">公開範囲</span>
