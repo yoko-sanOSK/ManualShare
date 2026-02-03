@@ -37,13 +37,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    // Firebase Studio (Cloud Workstations) 環境での開発をスムーズにするための設定
-    allowedDevOrigins: [
-      '*.cluster-ejd22kqny5htuv5dfowoyipt52.cloudworkstations.dev',
-      '*.cloudworkstations.dev'
-    ]
-  }
 };
 
 export default nextConfig;

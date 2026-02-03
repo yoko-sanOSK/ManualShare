@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, Shield } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -210,7 +210,7 @@ export default function SettingsPage() {
                   <Tag className="w-4 h-4" /> カテゴリー
                 </TabsTrigger>
                 <TabsTrigger value="visibility" className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" /> 公開範囲
+                  <FileText className="w-4 h-4" /> 公開範囲
                 </TabsTrigger>
               </TabsList>
 
@@ -304,7 +304,7 @@ export default function SettingsPage() {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg flex justify-between items-center">
                           <div className="flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-primary" />
+                            <FileText className="w-4 h-4 text-primary" />
                             {vis.name}
                           </div>
                           <div className="flex gap-1">
