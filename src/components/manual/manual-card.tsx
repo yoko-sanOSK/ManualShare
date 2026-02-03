@@ -19,12 +19,15 @@ interface ManualCardProps {
 }
 
 export function ManualCard({ manual }: ManualCardProps) {
+  // デフォルト画像URL
+  const defaultImageUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
+
   return (
     <Link href={`/manuals/${manual.id}`} className="block group transition-transform hover:scale-[1.02]">
       <Card className="h-full overflow-hidden border-none shadow-md bg-card">
         <div className="relative h-48 w-full">
           <Image
-            src={manual.imageUrl || "https://picsum.photos/seed/default/600/400"}
+            src={manual.imageUrl || defaultImageUrl}
             alt={manual.title}
             fill
             className="object-cover transition-opacity group-hover:opacity-90"

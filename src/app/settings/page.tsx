@@ -31,6 +31,9 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // デフォルトロゴURL
+  const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -69,14 +72,14 @@ export default function SettingsPage() {
       setEditingManual(prev => ({ ...prev!, imageUrl: url }));
       
       toast({
-        title: "画像をアップロードしました",
-        description: "サムネイルが更新されました。",
+        title: "アップロード完了",
+        description: "サムネイルを更新しました。",
       });
     } catch (error) {
       console.error("Image upload error:", error);
       toast({
         title: "アップロード失敗",
-        description: "画像のアップロード中にエラーが発生しました。",
+        description: "サムネイルのアップロード中にエラーが発生しました。",
         variant: "destructive",
       });
     } finally {
@@ -218,13 +221,12 @@ export default function SettingsPage() {
                         <CardContent className="p-0">
                           <div className="flex items-center p-4">
                             <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4 border">
-                              {manual.imageUrl ? (
-                                <Image src={manual.imageUrl} alt="" fill className="object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 bg-primary/5">
-                                  <ImageIcon className="w-6 h-6" />
-                                </div>
-                              )}
+                              <Image 
+                                src={manual.imageUrl || defaultLogoUrl} 
+                                alt="" 
+                                fill 
+                                className="object-cover" 
+                              />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -445,14 +447,12 @@ export default function SettingsPage() {
                         className="aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
                         onClick={() => !isUploading && fileInputRef.current?.click()}
                       >
-                        {editingManual?.imageUrl ? (
-                          <Image src={editingManual.imageUrl} fill className="object-cover" alt="" />
-                        ) : (
-                          <div className="text-muted-foreground/30 flex flex-col items-center p-4 text-center">
-                            <Upload className="w-8 h-8 mb-2 opacity-50" />
-                            <span className="text-[10px] font-medium leading-tight">クリックしてアップロード</span>
-                          </div>
-                        )}
+                        <Image 
+                          src={editingManual?.imageUrl || defaultLogoUrl} 
+                          fill 
+                          className="object-cover" 
+                          alt="" 
+                        />
                         {isUploading && (
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                             <Loader2 className="w-8 h-8 animate-spin text-white" />

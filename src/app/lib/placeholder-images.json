@@ -24,6 +24,12 @@
       "description": "Operations Manual",
       "imageUrl": "https://picsum.photos/seed/ops-manual/600/400",
       "imageHint": "logistics warehouse"
+    },
+    {
+      "id": "default-logo",
+      "description": "ManualMaster Default Logo",
+      "imageUrl": "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster",
+      "imageHint": "branding logo"
     }
   ]
 }

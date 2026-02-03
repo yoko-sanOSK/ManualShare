@@ -27,6 +27,9 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
   const { data: manuals, isLoading } = useCollection(manualQuery);
   const manual = manuals?.[0] || null;
 
+  // デフォルト画像URL
+  const defaultImageUrl = "https://placehold.co/800x400/6fa8dc/ffffff?text=ManualMaster";
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -70,7 +73,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
           <main className="p-6 md:p-8 lg:p-12 max-w-5xl mx-auto">
             <div className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden mb-8 shadow-lg">
               <Image
-                src={manual.imageUrl || "https://picsum.photos/seed/default/800/400"}
+                src={manual.imageUrl || defaultImageUrl}
                 alt={manual.title}
                 fill
                 className="object-cover"
