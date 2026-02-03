@@ -341,17 +341,16 @@ export default function SettingsPage() {
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
         <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
-          <DialogHeader className="sr-only">
-            <DialogTitle>記事編集</DialogTitle>
-            <DialogDescription>記事の内容、カテゴリー、サムネイルなどを編集します。</DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-b flex justify-between items-center bg-card">
-            <div className="font-bold text-lg">記事編集</div>
+          <DialogHeader className="px-6 py-4 border-b flex justify-between items-center bg-card">
+            <div>
+              <DialogTitle className="font-bold text-lg">記事編集</DialogTitle>
+              <DialogDescription className="sr-only">記事の内容、カテゴリー、サムネイルなどを編集します。</DialogDescription>
+            </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={() => setIsManualDialogOpen(false)} className="font-bold">キャンセル</Button>
               <Button onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
             </div>
-          </div>
+          </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 bg-muted/20">
             <div className="grid grid-cols-4 gap-8">
               <div className="col-span-3 space-y-6">

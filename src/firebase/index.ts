@@ -1,3 +1,4 @@
+
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
@@ -20,7 +21,6 @@ export function initializeFirebase(): FirebaseSdks {
   
   if (!hasConfig) {
     if (typeof window === 'undefined') {
-      // サーバーサイド（ビルド時）で設定がない場合は静かに null を返す
       return {
         firebaseApp: null,
         auth: null,
@@ -28,7 +28,6 @@ export function initializeFirebase(): FirebaseSdks {
         storage: null
       };
     }
-    // クライアントサイドで設定がない場合は警告を表示
     console.warn("Firebase configuration is missing. Check your environment variables.");
     return {
       firebaseApp: null,
@@ -46,11 +45,39 @@ export function initializeFirebase(): FirebaseSdks {
       app = getApp();
     }
 
+    // 各サービスを個別に初期化し、失敗しても他に影響を与えないようにする
+    let auth: Auth | null = null;
+    let firestore: Firestore | null = null;
+    let storage: FirebaseStorage | null = null;
+
+    try {
+      auth = getAuth(app);
+    } catch (e) {
+      console.error("Auth init error:", e);
+    }
+
+    try {
+      firestore = getFirestore(app);
+    } catch (e) {
+      console.error("Firestore init error:", e);
+    }
+
+    try {
+      // storageBucket が空でない場合のみ Storage を初期化
+      if (firebaseConfig.storageBucket) {
+        storage = getStorage(app);
+      } else {
+        console.warn("Storage Bucket is missing in config. Storage will not be available.");
+      }
+    } catch (e) {
+      console.error("Storage init error:", e);
+    }
+
     return {
       firebaseApp: app,
-      auth: getAuth(app),
-      firestore: getFirestore(app),
-      storage: getStorage(app)
+      auth,
+      firestore,
+      storage
     };
   } catch (error) {
     console.error("Firebase initialization failed:", error);
