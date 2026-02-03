@@ -4,8 +4,9 @@
 import { useState, useRef, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useFirebase } from "@/firebase";
 import { collection, doc, collectionGroup, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +25,11 @@ import Image from "next/image";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
+  const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -53,24 +56,32 @@ export default function SettingsPage() {
     status?: 'draft' | 'published';
   } | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !storage) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `manuals/covers/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      setEditingManual(prev => ({ ...prev!, imageUrl: url }));
+      
       toast({
-        title: "ファイルサイズが大きすぎます",
-        description: "2MB以下の画像を選択してください。",
+        title: "画像をアップロードしました",
+        description: "カバー画像が更新されました。",
+      });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast({
+        title: "アップロード失敗",
+        description: "画像のアップロード中にエラーが発生しました。",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsUploading(false);
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setEditingManual(prev => ({ ...prev!, imageUrl: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveCategory = () => {
@@ -427,12 +438,12 @@ export default function SettingsPage() {
 
                     <div className="space-y-3">
                       <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                        <ImageIcon className="w-3 h-3" />
+                        {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />}
                         カバー画像
                       </Label>
                       <div 
                         className="aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => !isUploading && fileInputRef.current?.click()}
                       >
                         {editingManual?.imageUrl ? (
                           <Image src={editingManual.imageUrl} fill className="object-cover" alt="" />
@@ -442,6 +453,11 @@ export default function SettingsPage() {
                             <span className="text-[10px] font-medium leading-tight">クリックしてアップロード</span>
                           </div>
                         )}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-white" />
+                          </div>
+                        )}
                       </div>
                       <input 
                         type="file" 
@@ -449,6 +465,7 @@ export default function SettingsPage() {
                         className="hidden" 
                         accept="image/*" 
                         onChange={handleImageUpload}
+                        disabled={isUploading}
                       />
                     </div>
                   </CardContent>

@@ -18,7 +18,8 @@ import {
   Code,
   Image as ImageIcon,
   Film,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -27,6 +28,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useFirebase } from "@/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useToast } from "@/hooks/use-toast";
 
 // カスタム動画ノードの定義
 const Video = Node.create({
@@ -87,8 +91,42 @@ interface RichTextEditorProps {
 const MenuBar = ({ editor }: { editor: any }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const { storage } = useFirebase();
+  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
 
   if (!editor) return null;
+
+  const handleFileUpload = async (file: File, type: 'image' | 'video') => {
+    if (!storage) return;
+    
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `manuals/media/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      
+      if (type === 'image') {
+        editor.chain().focus().setImage({ src: url }).run();
+      } else {
+        editor.chain().focus().setVideo({ src: url }).run();
+      }
+      
+      toast({
+        title: "アップロード完了",
+        description: "メディアを挿入しました。",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "アップロード失敗",
+        description: "ファイルのアップロード中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const addImage = () => {
     fileInputRef.current?.click();
@@ -97,12 +135,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const url = event.target?.result as string;
-        editor.chain().focus().setImage({ src: url }).run();
-      };
-      reader.readAsDataURL(file);
+      handleFileUpload(file, 'image');
     }
     e.target.value = '';
   };
@@ -114,13 +147,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Firestoreのドキュメント制限(1MB)を考慮し、プロトタイプとして警告を出すか検討
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const url = event.target?.result as string;
-        editor.chain().focus().setVideo({ src: url }).run();
-      };
-      reader.readAsDataURL(file);
+      handleFileUpload(file, 'video');
     }
     e.target.value = '';
   };
@@ -178,16 +205,18 @@ const MenuBar = ({ editor }: { editor: any }) => {
     },
     { type: "divider" },
     {
-      icon: <ImageIcon className="h-4 w-4" />,
+      icon: isUploading ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <ImageIcon className="h-4 w-4" />,
       title: "画像を挿入",
       action: addImage,
       isActive: () => editor.isActive("image"),
+      disabled: () => isUploading,
     },
     {
-      icon: <Film className="h-4 w-4" />,
+      icon: isUploading ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Film className="h-4 w-4" />,
       title: "動画ファイルを挿入 (.mp4)",
       action: addVideo,
       isActive: () => editor.isActive("video"),
+      disabled: () => isUploading,
     },
     { type: "divider" },
     {
