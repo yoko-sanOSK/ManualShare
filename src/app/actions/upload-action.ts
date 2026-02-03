@@ -1,4 +1,3 @@
-
 'use server';
 
 import { initializeFirebase } from '@/firebase';
@@ -17,28 +16,27 @@ export async function uploadFileAction(formData: FormData, path: string): Promis
   const { storage } = initializeFirebase();
   
   if (!storage) {
-    console.error('Firebase Storage initialization failed. Check environment variables.');
+    console.error('Firebase Storage initialization failed. Bucket might be missing in environment variables.');
     return { error: 'Firebase Storage が初期化されていません。Vercel の環境変数（NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET 等）を確認してください。' };
   }
 
-  // バケット名が正しく設定されているか確認
-  if (!storage.app.options.storageBucket) {
+  const bucketName = storage.app.options.storageBucket;
+  if (!bucketName) {
     console.error('Storage Bucket is not configured in Firebase options.');
     return { error: 'Storage Bucket が設定されていません。Firebase コンソールの設定を確認してください。' };
   }
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    // Node.js の Buffer ではなく、ブラウザ互換の Uint8Array として扱う
     const uint8Array = new Uint8Array(arrayBuffer);
     
     const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
     const storageRef = ref(storage, `${path}/${fileName}`);
     
-    console.log(`Uploading to bucket: ${storage.app.options.storageBucket}`);
+    console.log(`Uploading to bucket: ${bucketName}`);
     console.log(`Target path: ${path}/${fileName}`);
+    console.log(`MIME type: ${file.type}`);
     
-    // メタデータを明示的に指定してアップロード
     const snapshot = await uploadBytes(storageRef, uint8Array, {
       contentType: file.type || 'application/octet-stream',
     });
@@ -49,9 +47,12 @@ export async function uploadFileAction(formData: FormData, path: string): Promis
   } catch (error: any) {
     console.error('Server-side upload detailed error:', error);
     
-    // Firebase エラーコードに基づいたメッセージ
     if (error.code === 'storage/unauthorized') {
       return { error: 'Firebase Storage の書き込み権限がありません。セキュリティルールを確認してください。' };
+    }
+    
+    if (error.code === 'storage/project-not-found') {
+      return { error: 'Firebase プロジェクトが見つかりません。プロジェクトIDの設定を確認してください。' };
     }
     
     return { 
