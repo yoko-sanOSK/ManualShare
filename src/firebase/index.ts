@@ -1,4 +1,3 @@
-
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
@@ -12,12 +11,25 @@ export interface FirebaseSdks {
   storage: FirebaseStorage | null;
 }
 
-// サーバーサイド・クライアントサイド両方で安全に動作するように 'use client' を削除し
-// 初期化ロジックを最適化
+/**
+ * Firebase の初期化を安全に行う関数。
+ * 環境変数が不足しているビルド時などは null を返し、エラーでビルドが止まるのを防ぎます。
+ */
 export function initializeFirebase(): FirebaseSdks {
   const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
   
-  if (typeof window === 'undefined' && !hasConfig) {
+  if (!hasConfig) {
+    if (typeof window === 'undefined') {
+      // サーバーサイド（ビルド時）で設定がない場合は静かに null を返す
+      return {
+        firebaseApp: null,
+        auth: null,
+        firestore: null,
+        storage: null
+      };
+    }
+    // クライアントサイドで設定がない場合は警告を表示
+    console.warn("Firebase configuration is missing. Check your environment variables.");
     return {
       firebaseApp: null,
       auth: null,
