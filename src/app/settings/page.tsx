@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Shield, Lock, Key } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/tabs";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,7 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { verifyAdminPassword, updateAdminPassword } from "@/app/actions/admin-auth";
+import { verifyAdminPassword } from "@/app/actions/admin-auth";
+import { TabsList, TabsTrigger, TabsContent, Tabs } from "@/components/ui/tabs";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -34,12 +35,6 @@ export default function SettingsPage() {
   const [passwordInput, setPasswordInput] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
-  // パスワード変更用ステート
-  const [currentPass, setCurrentPass] = useState("");
-  const [newPass, setNewPass] = useState("");
-  const [confirmPass, setConfirmPass] = useState("");
-  const [isUpdatingPass, setIsUpdatingPass] = useState(false);
 
   const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
@@ -88,26 +83,6 @@ export default function SettingsPage() {
       });
     }
     setIsVerifying(false);
-  };
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPass !== confirmPass) {
-      toast({ title: "エラー", description: "新しいパスワードが一致しません。", variant: "destructive" });
-      return;
-    }
-
-    setIsUpdatingPass(true);
-    const result = await updateAdminPassword(currentPass, newPass);
-    if (result.success) {
-      toast({ title: "完了", description: result.message });
-      setCurrentPass("");
-      setNewPass("");
-      setConfirmPass("");
-    } else {
-      toast({ title: "失敗", description: result.message, variant: "destructive" });
-    }
-    setIsUpdatingPass(false);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,9 +213,6 @@ export default function SettingsPage() {
                 <TabsTrigger value="visibility" className="flex items-center gap-2">
                   <Shield className="w-4 h-4" /> 公開範囲
                 </TabsTrigger>
-                <TabsTrigger value="security" className="flex items-center gap-2">
-                  <Key className="w-4 h-4" /> セキュリティ
-                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="manuals" className="space-y-6">
@@ -349,57 +321,6 @@ export default function SettingsPage() {
                     </Card>
                   ))}
                 </div>
-              </TabsContent>
-
-              <TabsContent value="security" className="space-y-6">
-                <Card className="max-w-2xl mx-auto shadow-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Key className="w-5 h-5 text-primary" />
-                      管理画面パスワードの変更
-                    </CardTitle>
-                    <CardDescription>
-                      管理画面（このページ）にアクセスするためのパスワードを更新します。
-                      ハッシュ化されてセキュアに保存されます。
-                    </CardDescription>
-                  </CardHeader>
-                  <form onSubmit={handleUpdatePassword}>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>現在のパスワード</Label>
-                        <Input 
-                          type="password" 
-                          value={currentPass} 
-                          onChange={(e) => setCurrentPass(e.target.value)} 
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>新しいパスワード</Label>
-                        <Input 
-                          type="password" 
-                          value={newPass} 
-                          onChange={(e) => setNewPass(e.target.value)} 
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>新しいパスワード（確認）</Label>
-                        <Input 
-                          type="password" 
-                          value={confirmPass} 
-                          onChange={(e) => setConfirmPass(e.target.value)} 
-                          required 
-                        />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button type="submit" className="w-full font-bold" disabled={isUpdatingPass}>
-                        {isUpdatingPass ? <Loader2 className="w-4 h-4 animate-spin" /> : "パスワードを更新"}
-                      </Button>
-                    </CardFooter>
-                  </form>
-                </Card>
               </TabsContent>
             </Tabs>
           </main>
