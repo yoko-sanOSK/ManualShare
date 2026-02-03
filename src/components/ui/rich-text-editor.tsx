@@ -101,6 +101,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       const formData = new FormData();
       formData.append('file', file);
       
+      // クライアントSDKの直接アップロードを避け、Server Actionを使用
       const result = await uploadFileAction(formData, 'manuals/media');
       
       if ('error' in result) {

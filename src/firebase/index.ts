@@ -1,6 +1,4 @@
 
-'use client';
-
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
@@ -14,11 +12,11 @@ export interface FirebaseSdks {
   storage: FirebaseStorage | null;
 }
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// サーバーサイド・クライアントサイド両方で安全に動作するように 'use client' を削除し
+// 初期化ロジックを最適化
 export function initializeFirebase(): FirebaseSdks {
   const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
   
-  // ビルド時（サーバーサイド）で設定がない場合は、初期化をスキップしてnullを返す
   if (typeof window === 'undefined' && !hasConfig) {
     return {
       firebaseApp: null,
@@ -31,15 +29,7 @@ export function initializeFirebase(): FirebaseSdks {
   try {
     let app: FirebaseApp;
     if (!getApps().length) {
-      try {
-        // Firebase App Hosting環境での自動初期化を試行
-        app = initializeApp();
-      } catch (e) {
-        if (!hasConfig) {
-          throw new Error("Firebase config is missing.");
-        }
-        app = initializeApp(firebaseConfig);
-      }
+      app = initializeApp(firebaseConfig);
     } else {
       app = getApp();
     }

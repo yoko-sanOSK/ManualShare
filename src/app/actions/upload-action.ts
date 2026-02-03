@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 /**
  * サーバーサイドでファイルを Firebase Storage にアップロードするアクション。
- * ブラウザの CORS 制限を回避するためにサーバー経由で通信します。
+ * ブラウザの CORS 制限を完全に回避するために、Node.js サーバー経由で通信します。
  */
 export async function uploadFileAction(formData: FormData, path: string): Promise<{ url: string } | { error: string }> {
   const file = formData.get('file') as File;
@@ -20,10 +20,12 @@ export async function uploadFileAction(formData: FormData, path: string): Promis
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
     
-    // サーバーサイド（Node.js環境）でのアップロード
+    // Node.js 環境（サーバーサイド）でアップロードを実行
+    // これによりブラウザの CORS ポリシーの影響を受けなくなります
     const snapshot = await uploadBytes(storageRef, buffer, {
       contentType: file.type,
     });
@@ -31,7 +33,7 @@ export async function uploadFileAction(formData: FormData, path: string): Promis
     const url = await getDownloadURL(snapshot.ref);
     return { url };
   } catch (error: any) {
-    console.error('Upload error:', error);
+    console.error('Server-side upload error:', error);
     return { error: error.message || 'アップロードに失敗しました。' };
   }
 }

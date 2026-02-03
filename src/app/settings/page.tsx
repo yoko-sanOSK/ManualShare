@@ -88,6 +88,7 @@ export default function SettingsPage() {
       const formData = new FormData();
       formData.append('file', file);
       
+      // クライアントSDKの uploadBytes ではなく、Server Action を使用
       const result = await uploadFileAction(formData, 'manuals/covers');
       
       if ('error' in result) {
