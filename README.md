@@ -25,12 +25,12 @@ npm install
 
 ### 2. 環境変数の設定
 `.env` ファイルを作成し、Firebaseコンソールから取得した設定値を入力してください（`.env.example` 参照）。
+Vercelにデプロイする場合は、Vercelの管理画面で同じ環境変数を設定してください。
 
 ### 3. Firebase StorageのCORS設定 (必須)
-ブラウザからのアップロードを許可するために、以下のいずれかの方法でCORS設定を行ってください。
+ブラウザ（Vercel等のドメイン）からのアップロードを許可するために、以下の手順でCORS設定を行ってください。
 
-#### 方法 A: Google Cloud Shell を使う (ブラウザだけで完結)
-1. [Google Cloud Console](https://console.cloud.google.com/) にアクセスし、プロジェクトを選択します。
+1. [Google Cloud Console](https://console.cloud.google.com/) にアクセスし、対象のプロジェクトを選択します。
 2. 右上のターミナルアイコン（Cloud Shell）を開きます。
 3. プロジェクト内の `firebase-cors.json` の内容をコピーして、Cloud Shell上でファイルを作成します：
    ```bash
@@ -42,24 +42,11 @@ npm install
    gsutil cors set cors.json gs://YOUR_BUCKET_NAME
    ```
 
-#### 方法 B: ローカルPCのターミナルを使う (Google Cloud SDKインストール済みの場合)
-Google Cloud SDK (`gcloud`) がインストールされている場合、ローカルのターミナルから設定可能です。
-1. プロジェクトのルート（`firebase-cors.json` がある場所）に移動します。
-2. ログインとプロジェクトの選択：
-   ```bash
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
-   ```
-3. CORSの設定を実行：
-   ```bash
-   gsutil cors set firebase-cors.json gs://YOUR_BUCKET_NAME
-   ```
-
 ## 📦 デプロイ (Vercel)
 
 Vercelのプロジェクト設定で以下の環境変数を必ず設定してください：
 - `ADMIN_PASSWORD`: 管理画面へのログインパスワード。
-- Firebase関連の環境変数一式（`NEXT_PUBLIC_FIREBASE_API_KEY` 等）。
+- Firebase関連の環境変数一式（`.env.example` を参照）。
 
 ## 📄 ライセンス
 Copyright (c) 2025 yoko-san. All rights reserved.
