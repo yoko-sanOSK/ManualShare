@@ -42,7 +42,7 @@ export default function Home() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search manuals, guides, or protocols..."
+                  placeholder="マニュアル、ガイド、プロトコルを検索..."
                   className="pl-10 h-10 bg-muted/50 border-none focus-visible:ring-primary/20 transition-shadow"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -55,25 +55,25 @@ export default function Home() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
                 <h1 className="text-3xl font-headline font-bold text-foreground mb-2">
-                  Knowledge Hub
+                  ナレッジハブ
                 </h1>
                 <p className="text-muted-foreground flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
-                  Access company standards and operational guides.
+                  会社の標準と運用ガイドにアクセスします。
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-2 mr-2 text-sm font-medium text-muted-foreground">
                   <Filter className="w-4 h-4" />
-                  Filter:
+                  フィルター:
                 </div>
                 <Badge 
                   variant={activeCategory === null ? "default" : "outline"}
                   className={`cursor-pointer h-7 px-3 ${activeCategory === null ? "bg-primary" : "hover:border-primary/50"}`}
                   onClick={() => setActiveCategory(null)}
                 >
-                  All
+                  すべて
                 </Badge>
                 {CATEGORIES.map((cat) => (
                   <Badge
@@ -99,8 +99,8 @@ export default function Home() {
                 <div className="bg-muted p-4 rounded-full mb-4">
                   <Search className="w-8 h-8 text-muted-foreground/50" />
                 </div>
-                <h3 className="text-lg font-headline font-semibold">No manuals found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+                <h3 className="text-lg font-headline font-semibold">マニュアルが見つかりません</h3>
+                <p className="text-muted-foreground">検索ワードやフィルターを調整してみてください。</p>
               </div>
             )}
           </main>

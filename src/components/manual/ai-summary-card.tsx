@@ -25,8 +25,8 @@ export function AISummaryCard({ manualText }: AISummaryCardProps) {
     } catch (error) {
       console.error("Summarization error:", error);
       toast({
-        title: "Summarization failed",
-        description: "An error occurred while generating the summary. Please try again.",
+        title: "要約に失敗しました",
+        description: "要約の生成中にエラーが発生しました。もう一度お試しください。",
         variant: "destructive",
       });
     } finally {
@@ -39,7 +39,7 @@ export function AISummaryCard({ manualText }: AISummaryCardProps) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-lg font-headline flex items-center gap-2 text-foreground">
           <Sparkles className="w-5 h-5 text-secondary fill-secondary" />
-          AI Intelligent Summary
+          AI インテリジェント要約
         </CardTitle>
         {summary && (
           <Button
@@ -50,7 +50,7 @@ export function AISummaryCard({ manualText }: AISummaryCardProps) {
             className="h-8 px-2"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Regenerate
+            再生成
           </Button>
         )}
       </CardHeader>
@@ -66,7 +66,7 @@ export function AISummaryCard({ manualText }: AISummaryCardProps) {
         ) : (
           <div className="flex flex-col items-center justify-center py-6 text-center">
             <p className="text-sm text-muted-foreground mb-4">
-              Too long to read? Get a concise AI-generated summary of this manual.
+              読む時間がない？AIがこのマニュアルを簡潔に要約します。
             </p>
             <Button
               onClick={handleSummarize}
@@ -76,12 +76,12 @@ export function AISummaryCard({ manualText }: AISummaryCardProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing Manual...
+                  解析中...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Summarize with AI
+                  AIで要約する
                 </>
               )}
             </Button>

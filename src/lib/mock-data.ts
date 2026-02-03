@@ -1,5 +1,5 @@
 
-export type ManualCategory = 'IT' | 'HR' | 'Sales' | 'Operations' | 'Finance';
+export type ManualCategory = 'IT' | '人事' | '営業' | '運用' | '財務';
 
 export interface Manual {
   id: string;
@@ -11,119 +11,119 @@ export interface Manual {
   imageUrl?: string;
 }
 
-export const CATEGORIES: ManualCategory[] = ['IT', 'HR', 'Sales', 'Operations', 'Finance'];
+export const CATEGORIES: ManualCategory[] = ['IT', '人事', '営業', '運用', '財務'];
 
 export const MOCK_MANUALS: Manual[] = [
   {
     id: '1',
-    title: 'Remote Work Onboarding Guide',
-    category: 'HR',
-    description: 'A comprehensive guide for new employees starting in a remote environment.',
+    title: 'リモートワーク・オンボーディングガイド',
+    category: '人事',
+    description: 'リモート環境で新しく入社した従業員のための包括的なガイドです。',
     lastUpdated: '2023-11-15',
     imageUrl: 'https://picsum.photos/seed/hr-manual/600/400',
     content: `
-      # Welcome to the Team
+      # チームへようこそ
       
-      Setting up your home office is the first step to success. Ensure you have a stable internet connection and a quiet workspace.
+      ホームオフィスのセットアップは、成功への第一歩です。安定したインターネット接続と静かなワークスペースを確保してください。
       
-      ## Communication Channels
-      We primarily use Slack for daily communication and Zoom for meetings.
-      - **Slack**: Used for informal chats and quick questions.
-      - **Zoom**: Used for formal meetings and one-on-ones.
-      - **Email**: Used for formal external communications.
+      ## コミュニケーションチャネル
+      日常のコミュニケーションには主にSlackを、会議にはZoomを使用します。
+      - **Slack**: カジュアルなチャットや簡単な質問に使用します。
+      - **Zoom**: 正式な会議や1対1の面談に使用します。
+      - **メール**: 正式な外部連絡に使用します。
 
-      ## Working Hours
-      Our core hours are from 10:00 AM to 4:00 PM JST. Outside of these hours, you are free to manage your own time as long as your tasks are completed.
+      ## 勤務時間
+      コアタイムは日本時間の10:00 AMから4:00 PMです。この時間外は、タスクが完了している限り、自分の時間を自由に管理できます。
 
-      ## Equipment Request
-      If you need additional equipment like monitors or ergonomic chairs, please fill out the equipment request form on the company portal.
+      ## 備品のリクエスト
+      モニターやエルゴノミクスチェアなどの追加備品が必要な場合は、社内ポータルの備品リクエストフォームに記入してください。
       
-      ## Health and Wellbeing
-      Take regular breaks. We provide a stipend for gym memberships or meditation app subscriptions.
+      ## 健康とウェルビーイング
+      定期的に休憩を取ってください。ジムの会員権や瞑想アプリの購読料に対する手当を支給しています。
     `
   },
   {
     id: '2',
-    title: 'Security Compliance 101',
+    title: 'セキュリティコンプライアンス101',
     category: 'IT',
-    description: 'Essential security protocols for all staff members.',
+    description: 'すべてのスタッフメンバーに不可欠なセキュリティプロトコル。',
     lastUpdated: '2024-01-20',
     imageUrl: 'https://picsum.photos/seed/it-manual/600/400',
     content: `
-      # IT Security Protocol
+      # ITセキュリティプロトコル
       
-      Maintaining data security is everyone's responsibility. Failure to follow these steps can lead to severe vulnerabilities.
+      データのセキュリティを維持することは、全員の責任です。以下の手順に従わない場合、重大な脆弱性につながる可能性があります。
 
-      ## Password Management
-      - Use a unique password for every service.
-      - Use our approved password manager (1Password).
-      - Minimum 12 characters, including symbols.
+      ## パスワード管理
+      - すべてのサービスで固有のパスワードを使用してください。
+      - 承認済みのパスワードマネージャー（1Password）を使用してください。
+      - 記号を含む最低12文字。
 
-      ## Two-Factor Authentication (2FA)
-      2FA is mandatory for all company accounts. We prefer hardware keys (YubiKey) but also accept authenticator apps. SMS-based 2FA is prohibited.
+      ## 二要素認証 (2FA)
+      すべての社内アカウントで2FAが必須です。ハードウェアキー（YubiKey）を推奨しますが、認証アプリも受け付けます。SMSベースの2FAは禁止されています。
 
-      ## Handling Phishing
-      If you receive a suspicious email:
-      1. Do not click any links.
-      2. Do not download attachments.
-      3. Use the 'Report Phishing' button in Outlook/Gmail.
+      ## フィッシングへの対応
+      不審なメールを受信した場合：
+      1. リンクをクリックしないでください。
+      2. 添付ファイルをダウンロードしないでください。
+      3. Outlook/Gmailの「フィッシングを報告」ボタンを使用してください。
 
-      ## Secure Hardware
-      Never leave your laptop unattended in public places. Ensure your disk is encrypted.
+      ## ハードウェアの安全性
+      公共の場所でラップトップを放置しないでください。ディスクが暗号化されていることを確認してください。
     `
   },
   {
     id: '3',
-    title: 'Sales CRM Mastery',
-    category: 'Sales',
-    description: 'Optimizing your pipeline using our internal CRM tools.',
+    title: '営業CRMマスターガイド',
+    category: '営業',
+    description: '社内CRMツールを使用してパイプラインを最適化する方法。',
     lastUpdated: '2023-12-01',
     imageUrl: 'https://picsum.photos/seed/sales-manual/600/400',
     content: `
-      # CRM Workflow Optimization
+      # CRMワークフローの最適化
       
-      This manual covers the efficient use of our Salesforce integration to track leads and close deals.
+      このマニュアルでは、リードを追跡し、成約に導くためのSalesforce連携の効率的な使用方法について説明します。
 
-      ## Lead Qualification
-      Every lead must be qualified within 24 hours of entry. Use the BANT framework:
-      - **Budget**: Does the lead have the budget?
-      - **Authority**: Is the lead the decision-maker?
-      - **Need**: Is there a specific pain point we solve?
-      - **Timeline**: When are they looking to implement a solution?
+      ## リードの適格性確認
+      すべてのリードは、入力から24時間以内に適格性を確認する必要があります。BANTフレームワークを使用してください：
+      - **Budget (予算)**: リードには予算がありますか？
+      - **Authority (権限)**: リードは意思決定者ですか？
+      - **Need (ニーズ)**: 私たちが解決できる特定の悩みがありますか？
+      - **Timeline (時期)**: いつソリューションの導入を検討していますか？
 
-      ## Managing the Pipeline
-      Move deals through the stages: Discovery -> Demo -> Proposal -> Negotiation -> Closed.
-      Ensure notes are updated after every call.
+      ## パイプラインの管理
+      案件を以下のステージに進めます：発見 -> デモ -> 提案 -> 交渉 -> 成約。
+      すべての通話後にメモが更新されていることを確認してください。
 
-      ## Reporting
-      Monthly reports are generated automatically. Ensure your "Estimated Close Date" is accurate by the 25th of each month.
+      ## レポート
+      月次レポートは自動的に生成されます。毎月25日までに「成約予定日」が正確であることを確認してください。
     `
   },
   {
     id: '4',
-    title: 'Inventory Control Procedures',
-    category: 'Operations',
-    description: 'Standard operating procedures for warehouse and stock management.',
+    title: '在庫管理手順',
+    category: '運用',
+    description: '倉庫および在庫管理のための標準運用手順。',
     lastUpdated: '2023-10-22',
     imageUrl: 'https://picsum.photos/seed/ops-manual/600/400',
     content: `
-      # Inventory Management SOP
+      # 在庫管理SOP
       
-      Standard procedures for handling incoming and outgoing stock at our regional hubs.
+      地域拠点での入庫および出庫在庫を扱うための標準手順。
 
-      ## Receiving Shipments
-      1. Inspect pallet for damage.
-      2. Verify SKU counts against the manifest.
-      3. Log discrepancies in the ERP system immediately.
+      ## 出荷物の受け取り
+      1. パレットに損傷がないか検査します。
+      2. マニフェストに対してSKU数を確認します。
+      3. 不一致がある場合は、直ちにERPシステムに記録します。
 
-      ## Storage Best Practices
-      - FIFO (First-In, First-Out) must be strictly followed for perishable items.
-      - High-velocity items should be stored near the loading bay for faster dispatch.
+      ## 保管のベストプラクティス
+      - 生鮮品については、FIFO（先入れ先出し）を厳守する必要があります。
+      - 回転率の高いアイテムは、迅速な発送のために積み込みベイの近くに保管する必要があります。
 
-      ## Safety Protocols
-      - Wear high-visibility vests at all times.
-      - Forklift operation requires valid internal certification.
-      - Report any spills or hazards to the floor supervisor.
+      ## 安全プロトコル
+      - 常に高視認性ベストを着用してください。
+      - フォークリフトの操作には、有効な社内資格が必要です。
+      - こぼれや危険がある場合は、フロアスーパーバイザーに報告してください。
     `
   }
 ];

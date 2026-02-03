@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -17,7 +18,7 @@ const SummarizeManualInputSchema = z.object({
 export type SummarizeManualInput = z.infer<typeof SummarizeManualInputSchema>;
 
 const SummarizeManualOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the manual.'),
+  summary: z.string().describe('A concise summary of the manual in Japanese.'),
 });
 export type SummarizeManualOutput = z.infer<typeof SummarizeManualOutputSchema>;
 
@@ -36,7 +37,7 @@ const shouldSummarizeSection = ai.defineTool(
   },
   async input => {
     const {text} = await ai.generate({
-      prompt: `Determine if the following section from a manual should be summarized. Return true if it contains important information or key instructions, and false if it is redundant, obvious, or non-essential.\n\nSection: {{{sectionText}}}`,
+      prompt: `以下のマニュアルのセクションを要約すべきかどうかを判断してください。重要な情報や主要な指示が含まれている場合はtrueを、冗長、明白、または重要でない場合はfalseを返してください。\n\nセクション: {{{sectionText}}}`,
     });
     return text?.toLowerCase().includes('true') ?? false;
   }
@@ -44,14 +45,14 @@ const shouldSummarizeSection = ai.defineTool(
 
 const summarizeSection = ai.defineTool({
   name: 'summarizeSection',
-  description: 'Generates a concise summary of a given section of text from a manual.',
+  description: 'Generates a concise summary of a given section of text from a manual in Japanese.',
   inputSchema: z.object({
     sectionText: z.string().describe('The text content of the manual section.'),
   }),
-  outputSchema: z.string().describe('A concise summary of the manual section.'),
+  outputSchema: z.string().describe('A concise summary of the manual section in Japanese.'),
 }, async input => {
   const {text} = await ai.generate({
-    prompt: `Summarize the following section from a manual:\n\nSection: {{{sectionText}}}`,
+    prompt: `以下のマニュアルのセクションを日本語で簡潔に要約してください：\n\nセクション: {{{sectionText}}}`,
   });
   return text ?? '';
 });
@@ -61,7 +62,7 @@ const summarizeManualPrompt = ai.definePrompt({
   tools: [shouldSummarizeSection, summarizeSection],
   input: {schema: SummarizeManualInputSchema},
   output: {schema: SummarizeManualOutputSchema},
-  prompt: `You are an AI assistant designed to summarize lengthy manuals. Break down the manual into sections, and intelligently determine if each section is worth summarizing, using the shouldSummarizeSection tool. If a section should be summarized, use the summarizeSection tool to generate a concise summary. Finally, combine the summaries of the important sections into a cohesive overview of the manual.\n\nManual Text: {{{manualText}}}`,
+  prompt: `あなたは長いマニュアルを要約するために設計されたAIアシスタントです。マニュアルをセクションに分割し、shouldSummarizeSectionツールを使用して各セクションを要約する価値があるかどうかをインテリジェントに判断してください。要約すべきセクションについては、summarizeSectionツールを使用して日本語で簡潔な要約を生成してください。最後に、重要なセクションの要約を組み合わせて、マニュアルのまとまりのある概要を日本語で作成してください。\n\nマニュアル本文: {{{manualText}}}`,
 });
 
 const summarizeManualFlow = ai.defineFlow(

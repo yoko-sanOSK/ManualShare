@@ -35,7 +35,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
               <Link href="/">
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
+                  ダッシュボードへ戻る
                 </Button>
               </Link>
             </div>
@@ -72,15 +72,15 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground border-b pb-6">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    <span>Updated: {manual.lastUpdated}</span>
+                    <span>更新日: {manual.lastUpdated}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4" />
-                    <span>Author: Admin Team</span>
+                    <span>作成者: 管理チーム</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    <span>Read time: 5-7 mins</span>
+                    <span>読了時間: 約5-7分</span>
                   </div>
                 </div>
 
@@ -96,23 +96,23 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                   <AISummaryCard manualText={manual.content} />
                   
                   <div className="mt-8 p-6 bg-white rounded-xl shadow-sm border">
-                    <h3 className="font-headline font-bold text-lg mb-4">Manual Details</h3>
+                    <h3 className="font-headline font-bold text-lg mb-4">マニュアル詳細</h3>
                     <ul className="space-y-3 text-sm">
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Version</span>
+                        <span className="text-muted-foreground">バージョン</span>
                         <span className="font-medium">v1.2.0</span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Department</span>
+                        <span className="text-muted-foreground">部署</span>
                         <span className="font-medium">{manual.category}</span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Visibility</span>
-                        <span className="font-medium text-green-600">Company Wide</span>
+                        <span className="text-muted-foreground">公開範囲</span>
+                        <span className="font-medium text-green-600">全社公開</span>
                       </li>
                     </ul>
                     <Button className="w-full mt-6 bg-primary/10 text-primary hover:bg-primary/20" variant="ghost">
-                      Download PDF
+                      PDFをダウンロード
                     </Button>
                   </div>
                 </div>

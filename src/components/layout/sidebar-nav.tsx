@@ -20,10 +20,10 @@ import { usePathname } from "next/navigation";
 
 const CATEGORY_ICONS: Record<ManualCategory, any> = {
   IT: Laptop,
-  HR: Users,
-  Sales: TrendingUp,
-  Operations: Package,
-  Finance: Wallet,
+  '人事': Users,
+  '営業': TrendingUp,
+  '運用': Package,
+  '財務': Wallet,
 };
 
 export function SidebarNav() {
@@ -44,7 +44,7 @@ export function SidebarNav() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Main
+            メイン
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -52,7 +52,7 @@ export function SidebarNav() {
                 <SidebarMenuButton asChild isActive={pathname === "/"}>
                   <Link href="/">
                     <LayoutDashboard />
-                    <span>Dashboard</span>
+                    <span>ダッシュボード</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -62,7 +62,7 @@ export function SidebarNav() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Categories
+            カテゴリー
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -73,7 +73,7 @@ export function SidebarNav() {
                     <SidebarMenuButton asChild>
                       <Link href={`/?category=${category}`}>
                         <Icon />
-                        <span>{category} Manuals</span>
+                        <span>{category} マニュアル</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -85,20 +85,20 @@ export function SidebarNav() {
 
         <SidebarGroup className="mt-auto">
           <SidebarGroupLabel className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Support
+            サポート
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton>
                   <Settings />
-                  <span>Settings</span>
+                  <span>設定</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton>
                   <HelpCircle />
-                  <span>Help Center</span>
+                  <span>ヘルプセンター</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

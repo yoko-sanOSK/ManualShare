@@ -43,10 +43,10 @@ export function ManualCard({ manual }: ManualCardProps) {
         <CardFooter className="flex items-center justify-between pt-0 border-t border-muted/50 mt-auto pt-4">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" />
-            <span>Updated: {manual.lastUpdated}</span>
+            <span>更新日: {manual.lastUpdated}</span>
           </div>
           <div className="text-primary flex items-center gap-1 text-sm font-medium">
-            Read More
+            詳細を見る
             <ChevronRight className="w-4 h-4" />
           </div>
         </CardFooter>
