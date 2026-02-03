@@ -31,6 +31,7 @@ import {
 import { useFirebase } from "@/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 // カスタム動画ノードの定義
 const Video = Node.create({
@@ -255,6 +256,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
             return <div key={index} className="w-px h-6 bg-border mx-1 my-auto" />;
           }
 
+          const active = item.isActive?.();
+
           return (
             <Tooltip key={index}>
               <TooltipTrigger asChild>
@@ -264,7 +267,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
                   type="button"
                   onClick={item.action}
                   disabled={item.disabled?.()}
-                  className={item.isActive?.() ? "bg-muted" : ""}
+                  className={cn(
+                    "transition-all duration-200",
+                    active && "bg-primary/15 text-primary shadow-[0_0_8px_rgba(var(--primary),0.3)] hover:bg-primary/20"
+                  )}
                 >
                   {item.icon}
                 </Button>
