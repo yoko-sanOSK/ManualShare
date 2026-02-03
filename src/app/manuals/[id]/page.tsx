@@ -10,7 +10,7 @@ import { AISummaryCard } from "@/components/manual/ai-summary-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Calendar, User, Share2, Printer, Loader2, AlertCircle, Globe } from "lucide-react";
+import { ArrowLeft, Calendar, User, Loader2, AlertCircle, Globe } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -90,14 +90,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                   ダッシュボードへ戻る
                 </Button>
               </Link>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-9 w-9">
-                <Printer className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9">
-                <Share2 className="w-4 h-4" />
-              </Button>
             </div>
           </header>
 
