@@ -31,7 +31,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // デフォルトロゴURL
+  // デフォルトロゴURL (ManualMasterロゴを中央に配置したプレースホルダー)
   const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
   useEffect(() => {
@@ -346,13 +346,13 @@ export default function SettingsPage() {
       </Dialog>
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-background border-none shadow-2xl">
+        <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-background border-none shadow-2xl text-foreground">
           <div className="flex items-center justify-between px-6 py-4 border-b bg-card">
             <div className="flex items-center gap-4">
               <DialogTitle className="text-xl font-headline font-bold">
                 {editingManual?.id ? "記事を編集" : "新しい記事を作成"}
               </DialogTitle>
-              {editingManual?.id && <Badge variant="outline" className="text-[10px] px-2 py-0 h-5">ID: {editingManual.id}</Badge>}
+              {editingManual?.id && <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-mono">ID: {editingManual.id}</Badge>}
             </div>
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => setIsManualDialogOpen(false)}>
@@ -380,7 +380,7 @@ export default function SettingsPage() {
                       className="text-3xl font-headline font-bold h-16 border-none focus-visible:ring-0 px-0 placeholder:text-muted-foreground/20 bg-transparent"
                       value={editingManual?.title || ""}
                       onChange={(e) => setEditingManual(prev => ({ ...prev!, title: e.target.value }))}
-                      placeholder="魅力的なタイトルを入力..."
+                      placeholder="タイトルを入力..."
                     />
                   </div>
                   
@@ -401,8 +401,8 @@ export default function SettingsPage() {
               </div>
 
               <div className="lg:col-span-1 space-y-6">
-                <Card className="shadow-sm border-none bg-card">
-                  <CardHeader className="pb-3 border-b">
+                <Card className="shadow-sm border-none bg-card overflow-hidden">
+                  <CardHeader className="pb-3 border-b bg-muted/30">
                     <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
                       <Layout className="w-4 h-4" />
                       公開設定
@@ -430,32 +430,46 @@ export default function SettingsPage() {
                       <Label htmlFor="man-description" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">記事の概要</Label>
                       <Textarea
                         id="man-description"
-                        className="text-sm bg-muted/30 border-none resize-none"
-                        rows={4}
+                        className="text-sm bg-muted/30 border-none resize-none min-h-[100px]"
                         value={editingManual?.description || ""}
                         onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))}
-                        placeholder="記事の要約を短く入力してください"
+                        placeholder="マニュアルの概要を短く説明してください"
                       />
                     </div>
 
                     <div className="space-y-3">
                       <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                        {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />}
                         サムネイル
                       </Label>
                       <div 
-                        className="aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
+                        className="aspect-video bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
                         onClick={() => !isUploading && fileInputRef.current?.click()}
                       >
-                        <Image 
-                          src={editingManual?.imageUrl || defaultLogoUrl} 
-                          fill 
-                          className="object-cover" 
-                          alt="" 
-                        />
+                        {editingManual?.imageUrl ? (
+                          <>
+                            <Image 
+                              src={editingManual.imageUrl} 
+                              fill 
+                              className="object-cover group-hover:opacity-40 transition-opacity" 
+                              alt="サムネイルプレビュー" 
+                            />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 text-white font-bold text-[10px] uppercase tracking-widest">
+                              <Upload className="w-5 h-5 mb-2" />
+                              変更する
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-3 text-muted-foreground group-hover:text-primary transition-colors text-center p-4">
+                            <div className="bg-background p-3 rounded-full shadow-sm border group-hover:border-primary/50 transition-all">
+                              <ImageIcon className="w-6 h-6" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest leading-tight">画像を選択してください</span>
+                          </div>
+                        )}
                         {isUploading && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <Loader2 className="w-8 h-8 animate-spin text-white" />
+                          <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">アップロード中...</span>
                           </div>
                         )}
                       </div>

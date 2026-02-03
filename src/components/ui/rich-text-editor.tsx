@@ -18,7 +18,6 @@ import {
   Code,
   Image as ImageIcon,
   Film,
-  X,
   Loader2
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -269,7 +268,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                   disabled={item.disabled?.()}
                   className={cn(
                     "transition-all duration-200",
-                    active && "bg-primary/15 text-primary shadow-[0_0_8px_rgba(var(--primary),0.3)] hover:bg-primary/20"
+                    active && "bg-primary/20 text-primary shadow-[0_0_12px_rgba(var(--primary),0.4)] ring-1 ring-primary/30 hover:bg-primary/30"
                   )}
                 >
                   {item.icon}
@@ -302,7 +301,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       }),
       TiptapImage.configure({
         HTMLAttributes: {
-          class: 'mx-auto block rounded-lg shadow-md max-w-full h-auto my-6',
+          class: 'mx-auto block rounded-lg shadow-md max-w-full h-auto my-6 border-2 border-transparent focus:border-primary transition-all',
         },
       }),
       Video,
@@ -310,7 +309,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     content: content,
     editorProps: {
       attributes: {
-        class: "prose prose-sm md:prose-base focus:outline-none min-h-[400px] max-w-none p-4",
+        class: "prose prose-sm md:prose-base focus:outline-none min-h-[400px] max-w-none p-6 text-foreground",
       },
     },
     onUpdate: ({ editor }) => {
@@ -326,14 +325,15 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
   if (!mounted) {
     return (
-      <div className="w-full border rounded-md overflow-hidden bg-background h-[450px] animate-pulse flex items-center justify-center">
-        <p className="text-muted-foreground text-sm">エディタを読み込み中...</p>
+      <div className="w-full border rounded-xl overflow-hidden bg-background h-[450px] animate-pulse flex items-center justify-center border-dashed">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mr-3" />
+        <p className="text-muted-foreground text-sm font-medium">エディタを準備中...</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full border rounded-md overflow-hidden bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+    <div className="w-full border rounded-xl overflow-hidden bg-background ring-offset-background focus-within:ring-2 focus-within:ring-primary/20 transition-all border-border shadow-sm">
       <MenuBar editor={editor} />
       <EditorContent editor={editor} />
     </div>
