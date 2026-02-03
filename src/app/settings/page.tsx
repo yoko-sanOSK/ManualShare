@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -88,7 +88,6 @@ export default function SettingsPage() {
       const formData = new FormData();
       formData.append('file', file);
       
-      // クライアントSDKの uploadBytes ではなく、Server Action を使用
       const result = await uploadFileAction(formData, 'manuals/covers');
       
       if ('error' in result) {
@@ -312,7 +311,10 @@ export default function SettingsPage() {
 
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>カテゴリー編集</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>カテゴリー編集</DialogTitle>
+            <DialogDescription>カテゴリーの名称と詳細な説明を入力してください。</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <Label>カテゴリー名</Label>
             <Input value={editingCategory?.name || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, name: e.target.value }))} />
@@ -325,7 +327,10 @@ export default function SettingsPage() {
 
       <Dialog open={isVisibilityDialogOpen} onOpenChange={setIsVisibilityDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>公開範囲編集</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>公開範囲編集</DialogTitle>
+            <DialogDescription>マニュアルを表示できる権限の範囲を定義します。</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <Label>範囲名</Label>
             <Input value={editingVisibility?.name || ""} placeholder="例: 全社公開, 役員限定" onChange={(e) => setEditingVisibility(prev => ({ ...prev!, name: e.target.value }))} />
@@ -336,8 +341,12 @@ export default function SettingsPage() {
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
         <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>記事編集</DialogTitle>
+            <DialogDescription>記事の内容、カテゴリー、サムネイルなどを編集します。</DialogDescription>
+          </DialogHeader>
           <div className="px-6 py-4 border-b flex justify-between items-center bg-card">
-            <DialogTitle className="font-bold">記事編集</DialogTitle>
+            <div className="font-bold text-lg">記事編集</div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={() => setIsManualDialogOpen(false)} className="font-bold">キャンセル</Button>
               <Button onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>

@@ -101,7 +101,6 @@ const MenuBar = ({ editor }: { editor: any }) => {
       const formData = new FormData();
       formData.append('file', file);
       
-      // クライアントSDKの直接アップロードを避け、Server Actionを使用
       const result = await uploadFileAction(formData, 'manuals/media');
       
       if ('error' in result) {
@@ -119,10 +118,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
         description: "メディアを挿入しました。",
       });
     } catch (error: any) {
-      console.error("Upload error:", error);
+      console.error("Editor upload error:", error);
       toast({
         title: "アップロード失敗",
-        description: error.message || "ファイルのアップロード中にエラーが発生しました。",
+        description: error.message || "ファイルのアップロード中にエラーが発生しました。環境変数やストレージ設定を確認してください。",
         variant: "destructive",
       });
     } finally {
