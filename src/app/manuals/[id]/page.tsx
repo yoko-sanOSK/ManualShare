@@ -1,8 +1,10 @@
+
 "use client";
 
 import { use, useMemo } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { Footer } from "@/components/layout/footer";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collectionGroup } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
@@ -69,7 +71,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <SidebarNav />
-        <SidebarInset>
+        <SidebarInset className="flex flex-col">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
             <SidebarTrigger />
             <div className="flex items-center gap-4 ml-2">
@@ -82,7 +84,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
             </div>
           </header>
 
-          <main className="p-6 md:p-8 lg:p-12 max-w-5xl mx-auto w-full">
+          <main className="flex-1 p-6 md:p-8 lg:p-12 max-w-5xl mx-auto w-full">
             <div className="relative h-64 md:h-96 w-full rounded-2xl overflow-hidden mb-8 shadow-lg">
               <Image
                 src={manual?.imageUrl || defaultImageUrl}
@@ -126,6 +128,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
           </main>
+          <Footer />
         </SidebarInset>
       </div>
     </SidebarProvider>

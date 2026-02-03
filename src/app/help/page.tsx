@@ -3,6 +3,7 @@
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Settings, FilePlus, Save, Layout } from "lucide-react";
@@ -12,13 +13,13 @@ export default function HelpCenterPage() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <SidebarNav />
-        <SidebarInset>
+        <SidebarInset className="flex flex-col">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
             <SidebarTrigger />
             <h1 className="text-xl font-headline font-bold">ヘルプセンター</h1>
           </header>
 
-          <main className="p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
+          <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-headline font-bold mb-4">ManualMaster ガイド</h2>
               <p className="text-muted-foreground">
@@ -80,6 +81,7 @@ export default function HelpCenterPage() {
               </AccordionItem>
             </Accordion>
           </main>
+          <Footer />
         </SidebarInset>
       </div>
     </SidebarProvider>

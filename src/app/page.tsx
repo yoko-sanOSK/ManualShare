@@ -4,6 +4,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { Footer } from "@/components/layout/footer";
 import { ManualCard } from "@/components/manual/manual-card";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, BookOpen } from "lucide-react";
@@ -47,7 +48,7 @@ export default function Home() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <SidebarNav />
-        <SidebarInset>
+        <SidebarInset className="flex flex-col">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
             <SidebarTrigger />
             <div className="flex-1 max-w-xl">
@@ -63,7 +64,7 @@ export default function Home() {
             </div>
           </header>
 
-          <main className="p-6 md:p-8 lg:p-10">
+          <main className="flex-1 p-6 md:p-8 lg:p-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
                 <h1 className="text-3xl font-headline font-bold text-foreground mb-2">
@@ -122,6 +123,7 @@ export default function Home() {
               </div>
             )}
           </main>
+          <Footer />
         </SidebarInset>
       </div>
     </SidebarProvider>

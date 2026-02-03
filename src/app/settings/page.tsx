@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { Footer } from "@/components/layout/footer";
 import { useCollection, useFirestore, useMemoFirebase, useFirebase } from "@/firebase";
 import { collection, doc, collectionGroup, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -189,13 +190,13 @@ export default function SettingsPage() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <SidebarNav />
-        <SidebarInset>
+        <SidebarInset className="flex flex-col">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
             <SidebarTrigger />
             <h1 className="text-xl font-headline font-bold text-foreground">記事管理</h1>
           </header>
 
-          <main className="p-6 md:p-8 lg:p-10 max-w-6xl mx-auto w-full">
+          <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-6xl mx-auto w-full">
             <div className="mb-8 text-center md:text-left">
               <h2 className="text-3xl font-headline font-bold mb-2">管理ダッシュボード</h2>
               <p className="text-muted-foreground">記事、カテゴリー、公開範囲を自在にカスタマイズできます。</p>
@@ -323,6 +324,7 @@ export default function SettingsPage() {
               </TabsContent>
             </Tabs>
           </main>
+          <Footer />
         </SidebarInset>
       </div>
 
