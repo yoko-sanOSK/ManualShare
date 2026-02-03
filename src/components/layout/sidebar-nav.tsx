@@ -3,7 +3,6 @@
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
-import { cn } from "@/lib/utils";
 import {
   Sidebar,
   SidebarContent,
@@ -15,15 +14,41 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, Settings, HelpCircle, Laptop, Users, TrendingUp, Package, Wallet, Tag } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, HelpCircle, Tag } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export function SidebarNav() {
+function CategoryList() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get('category');
+  
   const firestore = useFirestore();
   const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
   const { data: categories } = useCollection(categoriesRef);
+
+  return (
+    <SidebarMenu>
+      {categories?.map((category) => (
+        <SidebarMenuItem key={category.id}>
+          <SidebarMenuButton asChild isActive={pathname === "/" && currentCategory === category.name}>
+            <Link href={`/?category=${category.name}`}>
+              <Tag />
+              <span>{category.name}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+      {(!categories || categories.length === 0) && (
+        <p className="px-4 text-xs text-muted-foreground italic">カテゴリーなし</p>
+      )}
+    </SidebarMenu>
+  );
+}
+
+export function SidebarNav() {
+  const pathname = usePathname();
 
   return (
     <Sidebar variant="sidebar" className="border-r border-border/50">
@@ -61,21 +86,9 @@ export function SidebarNav() {
             カテゴリー
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {categories?.map((category) => (
-                <SidebarMenuItem key={category.id}>
-                  <SidebarMenuButton asChild isActive={pathname === "/" && new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('category') === category.name}>
-                    <Link href={`/?category=${category.name}`}>
-                      <Tag />
-                      <span>{category.name}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              {(!categories || categories.length === 0) && (
-                <p className="px-4 text-xs text-muted-foreground italic">カテゴリーなし</p>
-              )}
-            </SidebarMenu>
+            <Suspense fallback={<p className="px-4 text-xs text-muted-foreground">読み込み中...</p>}>
+              <CategoryList />
+            </Suspense>
           </SidebarGroupContent>
         </SidebarGroup>
 

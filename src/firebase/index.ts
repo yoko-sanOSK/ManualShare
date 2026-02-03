@@ -10,10 +10,9 @@ import { getStorage } from 'firebase/storage';
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
+    // Check if we have valid config to avoid build errors
+    const hasConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
+    
     let firebaseApp;
     try {
       // Attempt to initialize via Firebase App Hosting environment variables
@@ -24,6 +23,11 @@ export function initializeFirebase() {
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
+      
+      if (!hasConfig && process.env.NODE_ENV === "production") {
+        console.error("Firebase config is missing in production environment variables.");
+      }
+      
       firebaseApp = initializeApp(firebaseConfig);
     }
 
