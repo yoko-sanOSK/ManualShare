@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useCollection, useFirestore, useMemoFirebase, useFirebase } from "@/firebase";
@@ -11,27 +11,30 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/no
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Image as ImageIcon, Layout, Save, X, Upload, Loader2, Globe, Shield } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Shield, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { verifyAdminPassword } from "@/app/actions/admin-auth";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
   const { storage } = useFirebase();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // ManualMasterのロゴが中央にあるデフォルト画像URL
   const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
 
   useEffect(() => {
@@ -45,13 +48,13 @@ export default function SettingsPage() {
   const { data: visibilities } = useCollection(visibilitiesRef);
 
   const manualsRef = useMemoFirebase(() => collectionGroup(firestore, "manuals"), [firestore]);
-  const { data: manuals, isLoading: isManualsLoading } = useCollection(manualsRef);
+  const { data: manuals } = useCollection(manualsRef);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string, name: string, description: string } | null>(null);
 
   const [isVisibilityDialogOpen, setIsVisibilityDialogOpen] = useState(false);
-  const [editingVisibility, setEditingVisibility] = useState<{ id?: string, name: string, color?: string } | null>(null);
+  const [editingVisibility, setEditingVisibility] = useState<{ id?: string, name: string } | null>(null);
 
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [editingManual, setEditingManual] = useState<{
@@ -63,6 +66,22 @@ export default function SettingsPage() {
     description: string;
     imageUrl?: string;
   } | null>(null);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifying(true);
+    const success = await verifyAdminPassword(passwordInput);
+    if (success) {
+      setIsAuthenticated(true);
+    } else {
+      toast({
+        title: "認証失敗",
+        description: "パスワードが正しくありません。",
+        variant: "destructive",
+      });
+    }
+    setIsVerifying(false);
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,6 +140,50 @@ export default function SettingsPage() {
 
   if (!mounted) return null;
 
+  if (!isAuthenticated) {
+    return (
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <SidebarNav />
+          <SidebarInset>
+            <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-6">
+              <Card className="max-w-md w-full shadow-lg">
+                <CardHeader className="text-center">
+                  <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                    <Lock className="text-primary w-8 h-8" />
+                  </div>
+                  <CardTitle className="text-2xl font-headline font-bold">認証が必要です</CardTitle>
+                  <CardDescription>記事管理画面にアクセスするにはパスワードを入力してください。</CardDescription>
+                </CardHeader>
+                <form onSubmit={handleAuth}>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="password">パスワード</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        placeholder="管理者パスワード"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" className="w-full font-bold" disabled={isVerifying}>
+                      {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "ログイン"}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -164,7 +227,7 @@ export default function SettingsPage() {
                   <Button onClick={() => {
                     setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", imageUrl: "" });
                     setIsManualDialogOpen(true);
-                  }} disabled={!categories?.length}>
+                  }} disabled={!categories?.length} className="font-bold">
                     <Plus className="w-5 h-5 mr-2" /> 新しい記事を作成
                   </Button>
                 </div>
@@ -201,7 +264,7 @@ export default function SettingsPage() {
               <TabsContent value="categories" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold">カテゴリー設定</h3>
-                  <Button variant="outline" onClick={() => { setEditingCategory({ name: "", description: "" }); setIsCategoryDialogOpen(true); }}>
+                  <Button variant="outline" onClick={() => { setEditingCategory({ name: "", description: "" }); setIsCategoryDialogOpen(true); }} className="font-bold">
                     <Plus className="w-4 h-4 mr-2" /> カテゴリー追加
                   </Button>
                 </div>
@@ -230,7 +293,7 @@ export default function SettingsPage() {
               <TabsContent value="visibility" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold">公開範囲設定</h3>
-                  <Button variant="outline" onClick={() => { setEditingVisibility({ name: "" }); setIsVisibilityDialogOpen(true); }}>
+                  <Button variant="outline" onClick={() => { setEditingVisibility({ name: "" }); setIsVisibilityDialogOpen(true); }} className="font-bold">
                     <Plus className="w-4 h-4 mr-2" /> 範囲を追加
                   </Button>
                 </div>
@@ -272,7 +335,7 @@ export default function SettingsPage() {
             <Textarea value={editingCategory?.description || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, description: e.target.value }))} />
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveCategory}>保存</Button>
+            <Button onClick={handleSaveCategory} className="font-bold">保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -285,19 +348,18 @@ export default function SettingsPage() {
             <Input value={editingVisibility?.name || ""} placeholder="例: 全社公開, 役員限定" onChange={(e) => setEditingVisibility(prev => ({ ...prev!, name: e.target.value }))} />
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveVisibility}>保存</Button>
+            <Button onClick={handleSaveVisibility} className="font-bold">保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
-        {/* [&>button]:hidden で右上の×ボタンを非表示にする */}
         <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
           <div className="px-6 py-4 border-b flex justify-between items-center bg-card">
             <DialogTitle className="font-bold">記事編集</DialogTitle>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setIsManualDialogOpen(false)}>キャンセル</Button>
-              <Button onClick={handleSaveManual}><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
+              <Button variant="ghost" onClick={() => setIsManualDialogOpen(false)} className="font-bold">キャンセル</Button>
+              <Button onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-6 bg-muted/20">
