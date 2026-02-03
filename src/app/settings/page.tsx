@@ -70,7 +70,7 @@ export default function SettingsPage() {
       
       toast({
         title: "画像をアップロードしました",
-        description: "カバー画像が更新されました。",
+        description: "サムネイルが更新されました。",
       });
     } catch (error) {
       console.error("Image upload error:", error);
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                     <div className="space-y-3">
                       <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                         {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />}
-                        カバー画像
+                        サムネイル
                       </Label>
                       <div 
                         className="aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
