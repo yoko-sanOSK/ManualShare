@@ -21,7 +21,7 @@ import {
   Youtube as YoutubeIcon,
   X
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -54,7 +54,6 @@ const MenuBar = ({ editor }: { editor: any }) => {
       };
       reader.readAsDataURL(file);
     }
-    // Reset input value to allow the same file to be selected again
     e.target.value = '';
   };
 
@@ -189,6 +188,12 @@ const MenuBar = ({ editor }: { editor: any }) => {
 };
 
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -224,6 +229,14 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       editor.commands.setContent(content);
     }
   }, [content, editor]);
+
+  if (!mounted) {
+    return (
+      <div className="w-full border rounded-md overflow-hidden bg-background h-[450px] animate-pulse flex items-center justify-center">
+        <p className="text-muted-foreground text-sm">エディタを読み込み中...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full border rounded-md overflow-hidden bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">

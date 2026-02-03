@@ -4,51 +4,41 @@
 import { use, useMemo } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, collectionGroup, query, where, getDocs } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collectionGroup, query, where } from "firebase/firestore";
 import { AISummaryCard } from "@/components/manual/ai-summary-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Clock, Share2, Printer, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, Share2, Printer, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { useState, useEffect } from "react";
 
 export default function ManualDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const firestore = useFirestore();
-  const [manual, setManual] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchManual() {
-      try {
-        const manualsRef = collectionGroup(firestore, "manuals");
-        const q = query(manualsRef, where("id", "==", id));
-        const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-          setManual(querySnapshot.docs[0].data());
-        }
-      } catch (error) {
-        console.error("Error fetching manual:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchManual();
+  // collectionGroup を使用して ID で検索するクエリを安定化
+  const manualQuery = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return query(collectionGroup(firestore, "manuals"), where("id", "==", id));
   }, [firestore, id]);
 
-  if (loading) {
+  const { data: manuals, isLoading } = useCollection(manualQuery);
+  const manual = manuals?.[0] || null;
+
+  if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium">マニュアルを読み込み中...</p>
+        </div>
       </div>
     );
   }
 
-  if (!manual) {
+  if (!manual && !isLoading) {
     notFound();
   }
 
@@ -84,7 +74,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 alt={manual.title}
                 fill
                 className="object-cover"
-                data-ai-hint="business office"
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
@@ -108,8 +98,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
 
-                <div className="prose prose-blue max-w-none">
-                  {/* リッチテキスト(HTML)を安全に描画 */}
+                <div className="prose prose-blue max-w-none dark:prose-invert">
                   <div 
                     className="text-foreground"
                     dangerouslySetInnerHTML={{ __html: manual.content || "" }}
@@ -121,7 +110,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 <div className="sticky top-24">
                   <AISummaryCard manualText={manual.content || ""} />
                   
-                  <div className="mt-8 p-6 bg-white rounded-xl shadow-sm border">
+                  <div className="mt-8 p-6 bg-card rounded-xl shadow-sm border">
                     <h3 className="font-headline font-bold text-lg mb-4">マニュアル詳細</h3>
                     <ul className="space-y-3 text-sm">
                       <li className="flex justify-between">
@@ -130,7 +119,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">公開範囲</span>
-                        <span className="font-medium text-green-600">全社公開</span>
+                        <span className="font-medium text-secondary">全社公開</span>
                       </li>
                     </ul>
                   </div>
