@@ -37,7 +37,7 @@ const shouldSummarizeSection = ai.defineTool(
   },
   async input => {
     const {text} = await ai.generate({
-      prompt: `以下のマニュアルのセクションを要約すべきかどうかを判断してください。重要な情報や主要な指示が含まれている場合はtrueを、冗長、明白、または重要でない場合はfalseを返してください。\n\nセクション: {{{sectionText}}}`,
+      prompt: `以下のマニュアルのセクションを要約すべきかどうかを判断してください。重要な情報や主要な指示が含まれている場合は 'true' を、冗長、明白、または重要でない場合は 'false' を返してください。\n\nセクション: ${input.sectionText}`,
     });
     return text?.toLowerCase().includes('true') ?? false;
   }
@@ -52,7 +52,7 @@ const summarizeSection = ai.defineTool({
   outputSchema: z.string().describe('A concise summary of the manual section in Japanese.'),
 }, async input => {
   const {text} = await ai.generate({
-    prompt: `以下のマニュアルのセクションを日本語で簡潔に要約してください：\n\nセクション: {{{sectionText}}}`,
+    prompt: `以下のマニュアルのセクションを日本語で簡潔に要約してください。箇条書きなどは使わず、1〜2文の短い文章にしてください：\n\nセクション: ${input.sectionText}`,
   });
   return text ?? '';
 });
@@ -62,7 +62,18 @@ const summarizeManualPrompt = ai.definePrompt({
   tools: [shouldSummarizeSection, summarizeSection],
   input: {schema: SummarizeManualInputSchema},
   output: {schema: SummarizeManualOutputSchema},
-  prompt: `あなたは長いマニュアルを要約するために設計されたAIアシスタントです。マニュアルをセクションに分割し、shouldSummarizeSectionツールを使用して各セクションを要約する価値があるかどうかをインテリジェントに判断してください。要約すべきセクションについては、summarizeSectionツールを使用して日本語で簡潔な要約を生成してください。最後に、重要なセクションの要約を組み合わせて、マニュアルのまとまりのある概要を日本語で作成してください。\n\nマニュアル本文: {{{manualText}}}`,
+  prompt: `あなたは長いマニュアルを要約するために設計されたAIアシスタントです。
+以下のステップで要約を作成してください：
+
+1. 与えられたマニュアル本文を論理的なセクション（章や見出しごとなど）に分割して考えてください。
+2. 各セクションについて、'shouldSummarizeSection' ツールを使用して、その内容が要約に含めるべき重要なものかどうかを確認してください。
+3. 要約すべきと判断されたセクションについては、'summarizeSection' ツールを使用して簡潔な日本語の要約を生成してください。
+4. 全ての重要なセクションの要約を組み合わせ、マニュアル全体のまとまりのある概要を日本語で作成してください。
+
+最後に、作成した概要を 'summary' フィールドに含めたJSON形式で出力してください。
+
+マニュアル本文: 
+{{{manualText}}}`,
 });
 
 const summarizeManualFlow = ai.defineFlow(
@@ -73,6 +84,9 @@ const summarizeManualFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await summarizeManualPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI failed to generate a summary output.');
+    }
+    return output;
   }
 );
