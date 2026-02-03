@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -132,7 +133,6 @@ export default function SettingsPage() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* マニュアル管理タブ（CMS風リスト） */}
               <TabsContent value="manuals" className="space-y-6 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between bg-card p-6 rounded-xl border shadow-sm">
                   <div className="flex items-center gap-4">
@@ -162,11 +162,6 @@ export default function SettingsPage() {
                   <Card className="bg-muted/30 border-dashed border-2 py-12">
                     <CardContent className="text-center">
                       <p className="text-muted-foreground mb-4">記事を作成する前に、少なくとも1つのカテゴリーを作成してください。</p>
-                      <Button variant="outline" onClick={() => {
-                        // タブを切り替えるかダイアログを出す
-                      }}>
-                        カテゴリーを作成する
-                      </Button>
                     </CardContent>
                   </Card>
                 ) : (
@@ -188,9 +183,6 @@ export default function SettingsPage() {
                                 <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10">
                                   {manual.categoryName}
                                 </Badge>
-                                {manual.status === 'draft' && (
-                                  <Badge variant="outline" className="text-muted-foreground">下書き</Badge>
-                                )}
                               </div>
                               <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
                               <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
@@ -221,7 +213,6 @@ export default function SettingsPage() {
                 )}
               </TabsContent>
 
-              {/* カテゴリー管理タブ */}
               <TabsContent value="categories" className="space-y-6 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-headline font-bold">カテゴリー管理</h3>
@@ -266,14 +257,10 @@ export default function SettingsPage() {
         </SidebarInset>
       </div>
 
-      {/* カテゴリー用ダイアログ */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingCategory?.id ? "カテゴリーを編集" : "新規カテゴリー追加"}</DialogTitle>
-            <DialogDescription>
-              マニュアルを分類するための名前と説明を入力してください。
-            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -302,7 +289,6 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* マニュアル用ダイアログ（microCMS風エディターUI） */}
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
         <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-background">
           <div className="flex items-center justify-between px-6 py-4 border-b bg-card">
@@ -310,9 +296,6 @@ export default function SettingsPage() {
               <DialogTitle className="text-xl font-headline font-bold">
                 {editingManual?.id ? "記事を編集" : "新しい記事を作成"}
               </DialogTitle>
-              <DialogDescription className="text-xs">
-                {editingManual?.id ? `ID: ${editingManual.id}` : "新しいコンテンツを作成します"}
-              </DialogDescription>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => setIsManualDialogOpen(false)}>
@@ -329,7 +312,6 @@ export default function SettingsPage() {
 
           <div className="flex-1 overflow-y-auto bg-muted/20">
             <div className="container max-w-5xl py-8 px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* メイン編集エリア */}
               <div className="lg:col-span-2 space-y-8">
                 <section className="bg-card p-6 rounded-xl border shadow-sm space-y-6">
                   <div className="space-y-2">
@@ -348,32 +330,23 @@ export default function SettingsPage() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="man-content" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                        本文 (Markdown対応)
-                      </Label>
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="text-[10px]">自動保存</Badge>
-                      </div>
-                    </div>
-                    <Textarea
-                      id="man-content"
-                      className="min-h-[400px] font-mono text-base border-none focus-visible:ring-0 p-0 resize-none leading-relaxed placeholder:text-muted-foreground/30"
-                      value={editingManual?.content || ""}
-                      onChange={(e) => setEditingManual(prev => ({ ...prev!, content: e.target.value }))}
-                      placeholder="# 章の見出しを入力...\n\nここから記事の本文を書き始めてください。"
+                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                      本文（リッチテキスト）
+                    </Label>
+                    <RichTextEditor
+                      content={editingManual?.content || ""}
+                      onChange={(html) => setEditingManual(prev => ({ ...prev!, content: html }))}
                     />
                   </div>
                 </section>
               </div>
 
-              {/* サイドバー設定エリア */}
               <div className="space-y-6">
                 <Card className="shadow-sm">
                   <CardHeader className="pb-3 border-b">
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
                       <Layout className="w-4 h-4" />
-                      メタ情報
+                      設定
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-6">
@@ -395,14 +368,14 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="man-description" className="text-xs font-bold text-muted-foreground">概要（短い説明）</Label>
+                      <Label htmlFor="man-description" className="text-xs font-bold text-muted-foreground">概要</Label>
                       <Textarea
                         id="man-description"
                         className="text-xs bg-muted/50"
                         rows={3}
                         value={editingManual?.description || ""}
                         onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))}
-                        placeholder="カードに表示される短い説明文"
+                        placeholder="短い説明文"
                       />
                     </div>
 
@@ -413,11 +386,11 @@ export default function SettingsPage() {
                       </Label>
                       <div className="aspect-video bg-muted rounded-lg overflow-hidden border relative flex items-center justify-center group">
                         {editingManual?.imageUrl ? (
-                          <img src={editingManual.imageUrl} className="w-full h-full object-cover" />
+                          <img src={editingManual.imageUrl} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <div className="text-muted-foreground/30 flex flex-col items-center">
                             <ImageIcon className="w-8 h-8 mb-1" />
-                            <span className="text-[10px]">No Image Selected</span>
+                            <span className="text-[10px]">No Image</span>
                           </div>
                         )}
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -429,22 +402,6 @@ export default function SettingsPage() {
                           />
                         </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">Unsplashなどの画像URLを貼り付けてください。</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="shadow-sm border-primary/20 bg-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col gap-4">
-                      <Button onClick={handleSaveManual} className="w-full font-bold">
-                        <Save className="w-4 h-4 mr-2" />
-                        保存して公開
-                      </Button>
-                      <Button variant="outline" className="w-full border-primary/20 bg-transparent text-primary hover:bg-primary/10">
-                        <Eye className="w-4 h-4 mr-2" />
-                        プレビュー
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>

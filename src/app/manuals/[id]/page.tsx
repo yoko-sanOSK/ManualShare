@@ -21,7 +21,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
   const [manual, setManual] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // マニュアルがネストされているため、collectionGroupを使用してIDで検索
   useEffect(() => {
     async function fetchManual() {
       try {
@@ -107,16 +106,14 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                     <User className="w-4 h-4" />
                     <span>作成者: 管理チーム</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    <span>読了時間: 約5-7分</span>
-                  </div>
                 </div>
 
                 <div className="prose prose-blue max-w-none">
-                  <div className="text-foreground leading-relaxed whitespace-pre-line text-lg">
-                    {manual.content?.trim()}
-                  </div>
+                  {/* リッチテキスト(HTML)を安全に描画 */}
+                  <div 
+                    className="text-foreground"
+                    dangerouslySetInnerHTML={{ __html: manual.content || "" }}
+                  />
                 </div>
               </div>
 
@@ -136,9 +133,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                         <span className="font-medium text-green-600">全社公開</span>
                       </li>
                     </ul>
-                    <Button className="w-full mt-6 bg-primary/10 text-primary hover:bg-primary/20" variant="ghost">
-                      PDFをダウンロード
-                    </Button>
                   </div>
                 </div>
               </div>
