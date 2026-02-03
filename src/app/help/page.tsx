@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Settings, FilePlus, Layers, Edit3, Save, Layout, Sparkles, Type } from "lucide-react";
+import { Settings, FilePlus, Layers, Edit3, Save, Layout, Sparkles, Type, Upload, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function HelpCenterPage() {
@@ -23,7 +23,7 @@ export default function HelpCenterPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-headline font-bold mb-4">ManualMaster 管理ガイド</h2>
               <p className="text-muted-foreground">
-                リッチテキストエディタを活用した高度なマニュアル作成と管理のガイドです。
+                リッチテキストエディタと画像アップロード機能を活用したマニュアル管理のガイドです。
               </p>
             </div>
 
@@ -36,18 +36,18 @@ export default function HelpCenterPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm">
-                  見出し、太字、リスト、引用など、視覚的に分かりやすいマニュアルをマウス操作だけで作成できます。
+                  見出し、太字、リストなど、視覚的に分かりやすいマニュアルをツールバー操作だけで作成できます。
                 </CardContent>
               </Card>
               <Card className="bg-secondary/5 border-secondary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-secondary">
-                    <Sparkles className="w-5 h-5" />
-                    AI要約機能
+                    <ImageIcon className="w-5 h-5" />
+                    画像アップロード
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm">
-                  リッチテキストで構成された長い記事も、AIがその構造を理解し、重要なポイントを的確に日本語で要約します。
+                  PCに保存されている画像をサムネイルとして直接アップロード。ダッシュボードで記事を際立たせます。
                 </CardContent>
               </Card>
             </div>
@@ -70,44 +70,39 @@ export default function HelpCenterPage() {
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
-                      <Edit3 className="w-4 h-4" /> 3. リッチテキストで執筆
+                      <Edit3 className="w-4 h-4" /> 3. コンテンツの編集と画像設定
                     </p>
-                    <p className="text-sm pl-6">ツールバーを使用して、見出しや箇条書きを設定します。右側のパネルでカテゴリーとアイキャッチ画像（URL）を設定してください。</p>
+                    <p className="text-sm pl-6">左側で本文を、右側のパネルでカテゴリーと「カバー画像」を設定します。画像はエリアをクリックしてPCから選択してください。</p>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
                       <Save className="w-4 h-4" /> 4. 保存と公開
                     </p>
-                    <p className="text-sm pl-6">右上の「公開する」ボタンを押すと、Firestoreに保存され、ダッシュボードに即座に掲載されます。</p>
+                    <p className="text-sm pl-6">右上の「保存して公開」ボタンを押すと、即座にダッシュボードに反映されます。</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger className="font-headline font-bold">カテゴリーの階層管理</AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <p className="mb-4 text-sm">「カテゴリー」タブでは、全社の知識を整理するための分類ラベルを作成・管理できます。</p>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3 text-sm">
-                      <Badge variant="outline" className="mt-0.5">追加</Badge>
-                      <span>新しい部署やプロジェクトに合わせたカテゴリーを作成します。</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-sm">
-                      <Badge variant="destructive" className="mt-0.5 bg-destructive/10 text-destructive border-none">削除</Badge>
-                      <span>不要なカテゴリーは削除できます。※所属する記事の分類が解除されるためご注意ください。</span>
-                    </li>
+                <AccordionTrigger className="font-headline font-bold">カバー画像（サムネイル）の扱い</AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3">
+                  <p className="text-sm">カバー画像は記事の「顔」となる重要な要素です。</p>
+                  <ul className="space-y-2 text-sm pl-4 list-disc">
+                    <li><b>推奨サイズ:</b> 2MB以下の画像ファイルを推奨します。</li>
+                    <li><b>形式:</b> JPG, PNG, WEBPなど一般的な画像形式に対応しています。</li>
+                    <li><b>表示場所:</b> ダッシュボードのカード上部、および記事詳細のヘッダーに使用されます。</li>
                   </ul>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger className="font-headline font-bold">エディタのショートカットと機能</AccordionTrigger>
+                <AccordionTrigger className="font-headline font-bold">エディタの機能とショートカット</AccordionTrigger>
                 <AccordionContent className="pt-2">
                   <div className="bg-muted p-3 rounded-lg text-xs font-mono space-y-1">
-                    <p>• <b>Bold</b>: 太字 (Ctrl+B)</p>
-                    <p>• <i>Italic</i>: 斜体 (Ctrl+I)</p>
-                    <p>• H1/H2: 見出しの切り替え</p>
-                    <p>• List: 箇条書きと番号付きリスト</p>
+                    <p>• <b>太字</b>: ボタンまたは Ctrl+B</p>
+                    <p>• <b>見出し</b>: 文章を構造化するために H1/H2 を使用します</p>
+                    <p>• <b>リスト</b>: 手順書には箇条書きや番号付きリストが有効です</p>
+                    <p>• <b>ツールチップ</b>: ボタンにカーソルを合わせると機能名が表示されます</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -12,16 +12,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Image as ImageIcon, Layout, Eye, Save, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Plus, Trash2, Edit, FileText, Tag, Image as ImageIcon, Layout, Save, X, Upload } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // カテゴリーの取得
   const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
@@ -35,7 +38,7 @@ export default function SettingsPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string, name: string, description: string } | null>(null);
 
-  // マニュアル用ダイアログ状態（CMSエディター風）
+  // マニュアル用ダイアログ状態
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [editingManual, setEditingManual] = useState<{
     id?: string;
@@ -47,6 +50,27 @@ export default function SettingsPage() {
     imageUrl?: string;
     status?: 'draft' | 'published';
   } | null>(null);
+
+  // 画像アップロード処理 (Base64変換)
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "ファイルサイズが大きすぎます",
+        description: "2MB以下の画像を選択してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditingManual(prev => ({ ...prev!, imageUrl: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   // カテゴリー保存
   const handleSaveCategory = () => {
@@ -64,14 +88,21 @@ export default function SettingsPage() {
 
   // カテゴリー削除
   const handleDeleteCategory = (id: string) => {
-    if (confirm("このカテゴリーを削除してもよろしいですか？（所属するマニュアルも表示されなくなる可能性があります）")) {
+    if (confirm("このカテゴリーを削除してもよろしいですか？")) {
       deleteDocumentNonBlocking(doc(firestore, "categories", id));
     }
   };
 
   // マニュアル保存
   const handleSaveManual = () => {
-    if (!editingManual?.title || !editingManual?.categoryId) return;
+    if (!editingManual?.title || !editingManual?.categoryId) {
+      toast({
+        title: "入力エラー",
+        description: "タイトルとカテゴリーは必須です。",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const category = categories?.find(c => c.id === editingManual.categoryId);
     const categoryName = category?.name || "未分類";
@@ -86,7 +117,7 @@ export default function SettingsPage() {
       categoryId: editingManual.categoryId,
       categoryName: categoryName,
       description: editingManual.description || "",
-      imageUrl: editingManual.imageUrl || `https://picsum.photos/seed/${manualId}/600/400`,
+      imageUrl: editingManual.imageUrl || "",
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString().split('T')[0],
       status: editingManual.status || 'published',
@@ -95,6 +126,10 @@ export default function SettingsPage() {
     setDocumentNonBlocking(manualDocRef, data, { merge: true });
     setIsManualDialogOpen(false);
     setEditingManual(null);
+    toast({
+      title: "保存しました",
+      description: `「${editingManual.title}」を公開しました。`,
+    });
   };
 
   // マニュアル削除
@@ -147,7 +182,7 @@ export default function SettingsPage() {
                   <Button 
                     size="lg"
                     onClick={() => {
-                      setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", status: 'published' });
+                      setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", status: 'published', imageUrl: "" });
                       setIsManualDialogOpen(true);
                     }} 
                     disabled={!categories || categories.length === 0}
@@ -167,15 +202,17 @@ export default function SettingsPage() {
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     {manuals?.map((manual) => (
-                      <Card key={manual.id} className="group hover:border-primary/50 transition-all shadow-sm">
+                      <Card key={manual.id} className="group hover:border-primary/50 transition-all shadow-sm overflow-hidden">
                         <CardContent className="p-0">
                           <div className="flex items-center p-4">
-                            <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4">
-                              <img 
-                                src={manual.imageUrl || "https://picsum.photos/seed/default/100/100"} 
-                                alt="" 
-                                className="w-full h-full object-cover"
-                              />
+                            <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4 border">
+                              {manual.imageUrl ? (
+                                <img src={manual.imageUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 bg-primary/5">
+                                  <ImageIcon className="w-6 h-6" />
+                                </div>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -257,6 +294,7 @@ export default function SettingsPage() {
         </SidebarInset>
       </div>
 
+      {/* カテゴリー用ダイアログ */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -289,50 +327,55 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* マニュアル用大型ダイアログ (CMSエディター風) */}
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-background">
+        <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-background border-none shadow-2xl">
           <div className="flex items-center justify-between px-6 py-4 border-b bg-card">
-            <div>
+            <div className="flex items-center gap-4">
               <DialogTitle className="text-xl font-headline font-bold">
                 {editingManual?.id ? "記事を編集" : "新しい記事を作成"}
               </DialogTitle>
+              {editingManual?.id && <Badge variant="outline" className="text-[10px] px-2 py-0 h-5">ID: {editingManual.id}</Badge>}
             </div>
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => setIsManualDialogOpen(false)}>
                 <X className="w-4 h-4 mr-2" />
-                閉じる
+                キャンセル
               </Button>
               <Separator orientation="vertical" className="h-6" />
-              <Button size="sm" onClick={handleSaveManual} className="bg-primary text-white font-bold px-6 shadow-sm">
+              <Button size="sm" onClick={handleSaveManual} className="bg-primary text-white font-bold px-6 shadow-md hover:bg-primary/90 transition-all">
                 <Save className="w-4 h-4 mr-2" />
-                公開する
+                保存して公開
               </Button>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto bg-muted/20">
-            <div className="container max-w-5xl py-8 px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <section className="bg-card p-6 rounded-xl border shadow-sm space-y-6">
+            <div className="container max-w-6xl py-8 px-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* メイン編集エリア */}
+              <div className="lg:col-span-3 space-y-8">
+                <section className="bg-card p-8 rounded-2xl border shadow-sm space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="man-title" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                      タイトル
+                    <Label htmlFor="man-title" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                      記事タイトル
                     </Label>
                     <Input
                       id="man-title"
-                      className="text-2xl font-bold h-14 border-none focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30"
+                      className="text-3xl font-headline font-bold h-16 border-none focus-visible:ring-0 px-0 placeholder:text-muted-foreground/20 bg-transparent"
                       value={editingManual?.title || ""}
                       onChange={(e) => setEditingManual(prev => ({ ...prev!, title: e.target.value }))}
-                      placeholder="記事のタイトルを入力..."
+                      placeholder="魅力的なタイトルを入力..."
                     />
                   </div>
                   
-                  <Separator />
+                  <Separator className="opacity-50" />
 
                   <div className="space-y-4">
-                    <Label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                      本文（リッチテキスト）
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        本文コンテンツ
+                      </Label>
+                    </div>
                     <RichTextEditor
                       content={editingManual?.content || ""}
                       onChange={(html) => setEditingManual(prev => ({ ...prev!, content: html }))}
@@ -341,22 +384,23 @@ export default function SettingsPage() {
                 </section>
               </div>
 
-              <div className="space-y-6">
-                <Card className="shadow-sm">
+              {/* サイド設定エリア */}
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="shadow-sm border-none bg-card">
                   <CardHeader className="pb-3 border-b">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
                       <Layout className="w-4 h-4" />
-                      設定
+                      公開設定
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="man-category" className="text-xs font-bold text-muted-foreground">カテゴリー</Label>
+                      <Label htmlFor="man-category" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">カテゴリー</Label>
                       <Select 
                         value={editingManual?.categoryId} 
                         onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}
                       >
-                        <SelectTrigger id="man-category" className="bg-muted/50">
+                        <SelectTrigger id="man-category" className="bg-muted/30 border-none h-10">
                           <SelectValue placeholder="カテゴリーを選択" />
                         </SelectTrigger>
                         <SelectContent>
@@ -368,43 +412,67 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="man-description" className="text-xs font-bold text-muted-foreground">概要</Label>
+                      <Label htmlFor="man-description" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">記事の概要</Label>
                       <Textarea
                         id="man-description"
-                        className="text-xs bg-muted/50"
-                        rows={3}
+                        className="text-sm bg-muted/30 border-none resize-none"
+                        rows={4}
                         value={editingManual?.description || ""}
                         onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))}
-                        placeholder="短い説明文"
+                        placeholder="記事の要約を短く入力してください（検索や一覧に表示されます）"
                       />
                     </div>
 
-                    <div className="space-y-4">
-                      <Label className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                         <ImageIcon className="w-3 h-3" />
-                        カバー画像
+                        カバー画像（サムネイル）
                       </Label>
-                      <div className="aspect-video bg-muted rounded-lg overflow-hidden border relative flex items-center justify-center group">
+                      <div 
+                        className="aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden border-2 border-dashed border-muted relative flex items-center justify-center group cursor-pointer hover:bg-muted/50 transition-all"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
                         {editingManual?.imageUrl ? (
                           <img src={editingManual.imageUrl} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="text-muted-foreground/30 flex flex-col items-center">
-                            <ImageIcon className="w-8 h-8 mb-1" />
-                            <span className="text-[10px]">No Image</span>
+                          <div className="text-muted-foreground/30 flex flex-col items-center p-4 text-center">
+                            <Upload className="w-8 h-8 mb-2 opacity-50" />
+                            <span className="text-[10px] font-medium leading-tight">クリックしてPCからアップロード<br/>(2MB以内推奨)</span>
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                           <Input 
-                            className="w-3/4 h-8 text-[10px] bg-white/10 text-white border-white/20"
-                            placeholder="画像URLを入力"
-                            value={editingManual?.imageUrl || ""}
-                            onChange={(e) => setEditingManual(prev => ({ ...prev!, imageUrl: e.target.value }))}
-                          />
+                        <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                           <Button size="sm" variant="secondary" className="text-[10px] h-8 font-bold">画像を選択</Button>
                         </div>
                       </div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleImageUpload}
+                      />
+                      {editingManual?.imageUrl && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-[10px] h-7 text-destructive"
+                          onClick={() => setEditingManual(prev => ({ ...prev!, imageUrl: "" }))}
+                        >
+                          画像を削除
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
+
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                  <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Tips
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    タイトルは読者の興味を引く具体的なものにしましょう。カバー画像を設定するとダッシュボードでの視認性が向上します。
+                  </p>
+                </div>
               </div>
             </div>
           </div>
