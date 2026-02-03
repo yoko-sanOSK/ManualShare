@@ -3,6 +3,8 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import TiptapImage from "@tiptap/extension-image";
+import Youtube from "@tiptap/extension-youtube";
 import { Button } from "@/components/ui/button";
 import { 
   Bold, 
@@ -14,9 +16,12 @@ import {
   Quote, 
   Undo, 
   Redo,
-  Code
+  Code,
+  Image as ImageIcon,
+  Youtube as YoutubeIcon,
+  X
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +36,38 @@ interface RichTextEditorProps {
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!editor) return null;
+
+  const addImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const url = event.target?.result as string;
+        editor.chain().focus().setImage({ src: url }).run();
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input value to allow the same file to be selected again
+    e.target.value = '';
+  };
+
+  const addYoutubeVideo = () => {
+    const url = prompt('YouTubeのURLを入力してください');
+    if (url) {
+      editor.commands.setYoutubeVideo({
+        src: url,
+        width: 640,
+        height: 480,
+      });
+    }
+  };
 
   const items = [
     {
@@ -86,6 +122,19 @@ const MenuBar = ({ editor }: { editor: any }) => {
     },
     { type: "divider" },
     {
+      icon: <ImageIcon className="h-4 w-4" />,
+      title: "画像を挿入",
+      action: addImage,
+      isActive: () => editor.isActive("image"),
+    },
+    {
+      icon: <YoutubeIcon className="h-4 w-4" />,
+      title: "YouTube動画を挿入",
+      action: addYoutubeVideo,
+      isActive: () => editor.isActive("youtube"),
+    },
+    { type: "divider" },
+    {
       icon: <Undo className="h-4 w-4" />,
       title: "元に戻す",
       action: () => editor.chain().focus().undo().run(),
@@ -102,6 +151,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
   return (
     <TooltipProvider>
       <div className="flex flex-wrap gap-1 p-2 border-b bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleImageFileChange}
+        />
         {items.map((item, index) => {
           if (item.type === "divider") {
             return <div key={index} className="w-px h-6 bg-border mx-1 my-auto" />;
@@ -113,6 +169,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 <Button
                   variant="ghost"
                   size="icon"
+                  type="button"
                   onClick={item.action}
                   disabled={item.disabled?.()}
                   className={item.isActive?.() ? "bg-muted" : ""}
@@ -138,6 +195,17 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
         heading: {
           levels: [1, 2, 3],
         },
+      }),
+      TiptapImage.configure({
+        HTMLAttributes: {
+          class: 'mx-auto block rounded-lg shadow-md max-w-full h-auto my-6',
+        },
+      }),
+      Youtube.configure({
+        HTMLAttributes: {
+          class: 'mx-auto block rounded-lg shadow-md max-w-full aspect-video my-6',
+        },
+        inline: false,
       }),
     ],
     content: content,

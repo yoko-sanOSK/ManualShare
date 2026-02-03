@@ -81,3 +81,14 @@
     @apply font-headline;
   }
 }
+
+/* Tiptap Content Styles for Centering and Media */
+.prose img, 
+.prose video, 
+.prose .youtube-video {
+  @apply mx-auto block max-w-full h-auto rounded-lg my-6 shadow-sm;
+}
+
+.prose .youtube-video iframe {
+  @apply w-full max-w-full rounded-lg;
+}
