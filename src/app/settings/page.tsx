@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { verifyAdminPassword } from "@/app/actions/admin-auth";
 import { uploadFileAction } from "@/app/actions/upload-action";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -40,13 +41,22 @@ export default function SettingsPage() {
     setMounted(true);
   }, []);
   
-  const categoriesRef = useMemoFirebase(() => collection(firestore!, "categories"), [firestore]);
+  const categoriesRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "categories");
+  }, [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
-  const visibilitiesRef = useMemoFirebase(() => collection(firestore!, "visibility_options"), [firestore]);
+  const visibilitiesRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "visibility_options");
+  }, [firestore]);
   const { data: visibilities } = useCollection(visibilitiesRef);
 
-  const manualsRef = useMemoFirebase(() => collectionGroup(firestore!, "manuals"), [firestore]);
+  const manualsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collectionGroup(firestore, "manuals");
+  }, [firestore]);
   const { data: manuals } = useCollection(manualsRef);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -103,15 +113,15 @@ export default function SettingsPage() {
   };
 
   const handleSaveCategory = () => {
-    if (!editingCategory?.name || !firestore) return;
-    const id = editingCategory.id || doc(categoriesRef!).id;
+    if (!editingCategory?.name || !firestore || !categoriesRef) return;
+    const id = editingCategory.id || doc(categoriesRef).id;
     setDocumentNonBlocking(doc(firestore, "categories", id), { id, ...editingCategory }, { merge: true });
     setIsCategoryDialogOpen(false);
   };
 
   const handleSaveVisibility = () => {
-    if (!editingVisibility?.name || !firestore) return;
-    const id = editingVisibility.id || doc(visibilitiesRef!).id;
+    if (!editingVisibility?.name || !firestore || !visibilitiesRef) return;
+    const id = editingVisibility.id || doc(visibilitiesRef).id;
     setDocumentNonBlocking(doc(firestore, "visibility_options", id), { id, ...editingVisibility }, { merge: true });
     setIsVisibilityDialogOpen(false);
   };
@@ -147,14 +157,15 @@ export default function SettingsPage() {
         <div className="flex min-h-screen w-full bg-background">
           <SidebarNav />
           <SidebarInset>
-            <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-6">
-              <Card className="max-w-md w-full shadow-lg">
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-6">
+              <BrandLogo size="lg" className="mb-10" />
+              <Card className="max-w-md w-full shadow-lg border-primary/20">
                 <CardHeader className="text-center">
                   <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
                     <Lock className="text-primary w-8 h-8" />
                   </div>
-                  <CardTitle className="text-2xl font-headline font-bold">認証が必要です</CardTitle>
-                  <CardDescription>記事管理画面にアクセスするにはパスワードを入力してください。</CardDescription>
+                  <CardTitle className="text-2xl font-headline font-bold">記事管理の認証</CardTitle>
+                  <CardDescription>管理機能にアクセスするには、管理者パスワードを入力してください。</CardDescription>
                 </CardHeader>
                 <form onSubmit={handleAuth}>
                   <CardContent className="space-y-4">

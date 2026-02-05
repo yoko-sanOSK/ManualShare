@@ -13,10 +13,11 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, Settings, HelpCircle, Tag, Share2 } from "lucide-react";
+import { LayoutDashboard, Settings, HelpCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { BrandLogo } from "./brand-logo";
 
 function CategoryList() {
   const pathname = usePathname();
@@ -52,13 +53,8 @@ export function SidebarNav() {
   return (
     <Sidebar variant="sidebar" className="border-r border-border/50">
       <SidebarHeader className="py-6 px-6">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Share2 className="text-white w-5 h-5" />
-          </div>
-          <span className="text-xl font-headline font-bold tracking-tight text-foreground">
-            Manual<span className="text-primary">Share</span>
-          </span>
+        <Link href="/">
+          <BrandLogo />
         </Link>
       </SidebarHeader>
       <SidebarContent>

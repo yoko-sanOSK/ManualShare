@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Settings, FilePlus, Save, Layout } from "lucide-react";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 export default function HelpCenterPage() {
   return (
@@ -19,10 +20,11 @@ export default function HelpCenterPage() {
           </header>
 
           <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
-            <div className="text-center mb-12">
+            <div className="flex flex-col items-center text-center mb-12">
+              <BrandLogo size="lg" className="mb-6" />
               <h2 className="text-3xl font-headline font-bold mb-4">ManualShare ガイド</h2>
-              <p className="text-muted-foreground">
-                リッチテキストエディタによる高度なマニュアル管理のガイドです。
+              <p className="text-muted-foreground max-w-lg">
+                リッチテキストエディタによる高度なマニュアル管理のガイドです。直感的な操作でナレッジを蓄積しましょう。
               </p>
             </div>
 
