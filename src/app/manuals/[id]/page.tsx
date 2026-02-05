@@ -1,4 +1,3 @@
-
 "use client";
 
 import { use, useMemo } from "react";
@@ -31,7 +30,7 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
     return manuals.find(m => m.id === id) || null;
   }, [manuals, id]);
 
-  const defaultImageUrl = "https://placehold.co/800x400/6fa8dc/ffffff?text=ManualMaster";
+  const defaultImageUrl = "https://placehold.co/800x400/6fa8dc/ffffff?text=ManualShare";
 
   if (isLoading) {
     return (

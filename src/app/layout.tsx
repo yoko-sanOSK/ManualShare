@@ -1,12 +1,11 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'マニュアルマスター',
-  description: 'ビジネスマニュアルプラットフォーム',
+  title: 'ManualShare | マニュアル共有プラットフォーム',
+  description: '企業のナレッジ共有を効率化するインテリジェントなビジネスマニュアルプラットフォーム',
 };
 
 export default function RootLayout({

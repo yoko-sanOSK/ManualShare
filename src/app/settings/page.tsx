@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -35,7 +34,7 @@ export default function SettingsPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
+  const defaultLogoUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualShare";
 
   useEffect(() => {
     setMounted(true);

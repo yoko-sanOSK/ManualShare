@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -14,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, Settings, HelpCircle, Tag } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, HelpCircle, Tag, Share2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -25,7 +24,7 @@ function CategoryList() {
   const currentCategory = searchParams.get('category');
   
   const firestore = useFirestore();
-  const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
+  const categoriesRef = useMemoFirebase(() => collection(firestore!, "categories"), [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
   return (
@@ -55,10 +54,10 @@ export function SidebarNav() {
       <SidebarHeader className="py-6 px-6">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FileText className="text-white w-5 h-5" />
+            <Share2 className="text-white w-5 h-5" />
           </div>
           <span className="text-xl font-headline font-bold tracking-tight text-foreground">
-            Manual<span className="text-primary">Master</span>
+            Manual<span className="text-primary">Share</span>
           </span>
         </Link>
       </SidebarHeader>

@@ -1,4 +1,4 @@
-# ManualMaster (マニュアルマスター)
+# ManualShare (マニュアルシェア)
 
 企業のナレッジ共有を効率化するためのインテリジェントなビジネスマニュアルプラットフォームです。
 
@@ -13,7 +13,8 @@
 
 - **Frontend**: Next.js 15 (App Router), TypeScript
 - **Styling**: Tailwind CSS, ShadCN UI
-- **Backend**: Firebase (Firestore, Storage)
+- **Backend**: Firebase (Firestore, Auth)
+- **Media Storage**: Vercel Blob
 - **Deployment**: Vercel
 
 ## 🏁 セットアップ

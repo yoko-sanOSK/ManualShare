@@ -1,4 +1,3 @@
-
 {
   "placeholderImages": [
     {
@@ -27,8 +26,8 @@
     },
     {
       "id": "default-logo",
-      "description": "ManualMaster Default Logo",
-      "imageUrl": "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster",
+      "description": "ManualShare Default Logo",
+      "imageUrl": "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualShare",
       "imageHint": "branding logo"
     }
   ]

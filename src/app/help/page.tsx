@@ -20,7 +20,7 @@ export default function HelpCenterPage() {
 
           <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-headline font-bold mb-4">ManualMaster ガイド</h2>
+              <h2 className="text-3xl font-headline font-bold mb-4">ManualShare ガイド</h2>
               <p className="text-muted-foreground">
                 リッチテキストエディタによる高度なマニュアル管理のガイドです。
               </p>
@@ -70,7 +70,7 @@ export default function HelpCenterPage() {
                 <AccordionContent className="pt-2 space-y-3 text-sm">
                   <div className="flex flex-col gap-2">
                     <p className="font-bold text-foreground">・サムネイル:</p>
-                    <p>設定しない場合は「ManualMaster」のロゴが自動で表示されます。記事を識別しやすくするために設定を推奨します。</p>
+                    <p>設定しない場合は「ManualShare」のロゴが自動で表示されます。記事を識別しやすくするために設定を推奨します。</p>
                   </div>
                   <div className="flex flex-col gap-2">
                     <p className="font-bold text-foreground">・動画ファイル (導入予定):</p>

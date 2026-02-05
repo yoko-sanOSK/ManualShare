@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -19,8 +18,8 @@ interface ManualCardProps {
 }
 
 export function ManualCard({ manual }: ManualCardProps) {
-  // デフォルト画像URL (ManualMasterロゴ入り)
-  const defaultImageUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualMaster";
+  // デフォルト画像URL (ManualShareロゴ入り)
+  const defaultImageUrl = "https://placehold.co/600x400/6fa8dc/ffffff?text=ManualShare";
 
   return (
     <Link href={`/manuals/${manual.id}`} className="block group transition-transform hover:scale-[1.02]">

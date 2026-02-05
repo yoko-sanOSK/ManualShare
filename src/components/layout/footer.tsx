@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,7 +23,7 @@ export function Footer() {
             &copy; {year || "2024"} yoko-san. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground/60">
-            ManualMaster - ビジネスマニュアルプラットフォーム
+            ManualShare - マニュアル共有プラットフォーム
           </p>
         </div>
         
