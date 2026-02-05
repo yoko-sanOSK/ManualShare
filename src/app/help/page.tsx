@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -11,7 +10,7 @@ import { Settings, FilePlus, Save, Layout } from "lucide-react";
 export default function HelpCenterPage() {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-background font-body">
         <SidebarNav />
         <SidebarInset className="flex flex-col">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
@@ -36,7 +35,7 @@ export default function HelpCenterPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm leading-relaxed text-muted-foreground">
-                  画像や動画を直接埋め込むことができ、視覚的に分かりやすいマニュアルを作成できます。
+                  現在は画像の埋め込みに対応しており、視覚的に分かりやすいマニュアルを作成できます。動画機能は順次導入予定です。
                 </CardContent>
               </Card>
             </div>
@@ -55,7 +54,7 @@ export default function HelpCenterPage() {
                     <p className="font-medium text-primary flex items-center gap-2">
                       <FilePlus className="w-4 h-4" /> 2. 記事作成とメディア挿入
                     </p>
-                    <p className="text-sm pl-6">エディタのツールバーを使い、画像や動画をPCからアップロードして挿入します。</p>
+                    <p className="text-sm pl-6">エディタのツールバーを使い、画像をPCからアップロードして挿入します。</p>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
@@ -74,8 +73,8 @@ export default function HelpCenterPage() {
                     <p>設定しない場合は「ManualMaster」のロゴが自動で表示されます。記事を識別しやすくするために設定を推奨します。</p>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p className="font-bold text-foreground">・動画ファイル:</p>
-                    <p>MP4形式をサポートしています。ストレージに直接アップロードされるため、1MBを超えるファイルも扱えます。</p>
+                    <p className="font-bold text-foreground">・動画ファイル (導入予定):</p>
+                    <p>将来的なアップデートにより、MP4形式の動画アップロードに対応予定です。現在は画像のみをサポートしています。</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>

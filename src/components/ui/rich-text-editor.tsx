@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEditor, EditorContent, Node, mergeAttributes } from "@tiptap/react";
@@ -31,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { uploadFileAction } from "@/app/actions/upload-action";
 
-// カスタム動画ノードの定義
+// カスタム動画ノードの定義（将来用）
 const Video = Node.create({
   name: 'video',
   group: 'block',
@@ -89,13 +88,12 @@ interface RichTextEditorProps {
 
 const MenuBar = ({ editor }: { editor: any }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
   if (!editor) return null;
 
-  const handleFileUpload = async (file: File, type: 'image' | 'video') => {
+  const handleFileUpload = async (file: File) => {
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -107,21 +105,17 @@ const MenuBar = ({ editor }: { editor: any }) => {
         throw new Error(result.error);
       }
       
-      if (type === 'image') {
-        editor.chain().focus().setImage({ src: result.url }).run();
-      } else {
-        editor.chain().focus().setVideo({ src: result.url }).run();
-      }
+      editor.chain().focus().setImage({ src: result.url }).run();
       
       toast({
         title: "アップロード完了",
-        description: "メディアを挿入しました。",
+        description: "画像を挿入しました。",
       });
     } catch (error: any) {
       console.error("Editor upload error:", error);
       toast({
         title: "アップロード失敗",
-        description: error.message || "ファイルのアップロード中にエラーが発生しました。環境変数やストレージ設定を確認してください。",
+        description: error.message || "ファイルのアップロード中にエラーが発生しました。",
         variant: "destructive",
       });
     } finally {
@@ -136,21 +130,16 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleFileUpload(file, 'image');
+      handleFileUpload(file);
     }
     e.target.value = '';
   };
 
-  const addVideo = () => {
-    videoInputRef.current?.click();
-  };
-
-  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileUpload(file, 'video');
-    }
-    e.target.value = '';
+  const notifyVideoComingSoon = () => {
+    toast({
+      title: "導入予定の機能",
+      description: "動画の添付機能は現在開発中です。今後のアップデートをお待ちください。",
+    });
   };
 
   const items = [
@@ -213,11 +202,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
       disabled: () => isUploading,
     },
     {
-      icon: isUploading ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Film className="h-4 w-4" />,
-      title: "動画ファイルを挿入 (.mp4)",
-      action: addVideo,
-      isActive: () => editor.isActive("video"),
-      disabled: () => isUploading,
+      icon: <Film className="h-4 w-4 opacity-50" />,
+      title: "動画を挿入 (導入予定)",
+      action: notifyVideoComingSoon,
+      isActive: () => false,
+      disabled: () => false,
     },
     { type: "divider" },
     {
@@ -243,13 +232,6 @@ const MenuBar = ({ editor }: { editor: any }) => {
           ref={fileInputRef}
           className="hidden"
           onChange={handleImageFileChange}
-        />
-        <input
-          type="file"
-          accept="video/mp4"
-          ref={videoInputRef}
-          className="hidden"
-          onChange={handleVideoFileChange}
         />
         {items.map((item, index) => {
           if (item.type === "divider") {
@@ -310,7 +292,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     content: content,
     editorProps: {
       attributes: {
-        class: "prose prose-sm md:prose-base focus:outline-none min-h-[400px] max-w-none p-6 text-foreground",
+        class: "prose prose-sm md:prose-base focus:outline-none min-h-[400px] max-w-none p-6 text-foreground font-body",
       },
     },
     onUpdate: ({ editor }) => {
