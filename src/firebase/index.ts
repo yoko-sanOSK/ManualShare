@@ -1,14 +1,13 @@
+
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 export interface FirebaseSdks {
   firebaseApp: FirebaseApp | null;
   auth: Auth | null;
   firestore: Firestore | null;
-  storage: FirebaseStorage | null;
 }
 
 /**
@@ -19,20 +18,10 @@ export function initializeFirebase(): FirebaseSdks {
   const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
   
   if (!hasConfig) {
-    if (typeof window === 'undefined') {
-      return {
-        firebaseApp: null,
-        auth: null,
-        firestore: null,
-        storage: null
-      };
-    }
-    console.warn("Firebase configuration is missing. Check your environment variables.");
     return {
       firebaseApp: null,
       auth: null,
       firestore: null,
-      storage: null
     };
   }
 
@@ -46,7 +35,6 @@ export function initializeFirebase(): FirebaseSdks {
 
     let auth: Auth | null = null;
     let firestore: Firestore | null = null;
-    let storage: FirebaseStorage | null = null;
 
     try {
       auth = getAuth(app);
@@ -60,22 +48,10 @@ export function initializeFirebase(): FirebaseSdks {
       console.error("Firestore init error:", e);
     }
 
-    try {
-      // storageBucket が設定されている場合のみ初期化を試みる
-      if (firebaseConfig.storageBucket && firebaseConfig.storageBucket !== '') {
-        storage = getStorage(app);
-      } else {
-        console.warn("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is missing. Storage feature will be disabled.");
-      }
-    } catch (e) {
-      console.error("Storage init error:", e);
-    }
-
     return {
       firebaseApp: app,
       auth,
       firestore,
-      storage
     };
   } catch (error) {
     console.error("Firebase initialization failed:", error);
@@ -83,7 +59,6 @@ export function initializeFirebase(): FirebaseSdks {
       firebaseApp: null,
       auth: null,
       firestore: null,
-      storage: null
     };
   }
 }
