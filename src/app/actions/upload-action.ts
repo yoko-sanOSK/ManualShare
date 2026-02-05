@@ -17,46 +17,47 @@ export async function uploadFileAction(formData: FormData, path: string): Promis
   
   if (!storage) {
     console.error('Firebase Storage initialization failed. Bucket might be missing in environment variables.');
-    return { error: 'Firebase Storage が初期化されていません。Vercel の環境変数（NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET 等）を確認してください。' };
+    return { error: 'Firebase Storage が初期化されていません。Vercel の環境変数（NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET）を確認するか、Firebase コンソールで Storage を有効にしてください。' };
   }
 
   const bucketName = storage.app.options.storageBucket;
   if (!bucketName) {
-    console.error('Storage Bucket is not configured in Firebase options.');
-    return { error: 'Storage Bucket が設定されていません。Firebase コンソールの設定を確認してください。' };
+    return { error: 'Storage Bucket が設定されていません。Firebase コンソールのプロジェクト設定を確認してください。' };
   }
 
   try {
     const arrayBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     
-    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-    const storageRef = ref(storage, `${path}/${fileName}`);
+    // 特殊文字を置換して安全なパスを作成
+    const safeFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    const storageRef = ref(storage, `${path}/${safeFileName}`);
     
     console.log(`Uploading to bucket: ${bucketName}`);
-    console.log(`Target path: ${path}/${fileName}`);
-    console.log(`MIME type: ${file.type}`);
     
     const snapshot = await uploadBytes(storageRef, uint8Array, {
       contentType: file.type || 'application/octet-stream',
     });
     
     const url = await getDownloadURL(snapshot.ref);
-    console.log('Upload successful:', url);
     return { url };
   } catch (error: any) {
-    console.error('Server-side upload detailed error:', error);
+    console.error('Upload action detailed error:', error);
     
     if (error.code === 'storage/unauthorized') {
-      return { error: 'Firebase Storage の書き込み権限がありません。セキュリティルールを確認してください。' };
+      return { error: 'Firebase Storage の書き込み権限がありません。セキュリティルールを公開（allow write: if true）にして試してください。' };
     }
     
     if (error.code === 'storage/project-not-found') {
       return { error: 'Firebase プロジェクトが見つかりません。プロジェクトIDの設定を確認してください。' };
     }
+
+    if (error.code === 'storage/bucket-not-found') {
+      return { error: '指定された Storage バケットが見つかりません。Firebase コンソールでバケットが作成されているか確認してください。' };
+    }
     
     return { 
-      error: `アップロードに失敗しました (${error.code || 'unknown'}): ${error.message || '予期せぬエラーが発生しました。'}` 
+      error: `アップロードに失敗しました: ${error.message || '不明なエラーが発生しました。'} (Code: ${error.code || 'unknown'})` 
     };
   }
 }

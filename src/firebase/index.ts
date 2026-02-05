@@ -19,7 +19,6 @@ export function initializeFirebase(): FirebaseSdks {
   const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
   
   if (!hasConfig) {
-    // サーバーサイドのビルドプロセス中などは警告を出して null を返す
     if (typeof window === 'undefined') {
       return {
         firebaseApp: null,
@@ -62,10 +61,11 @@ export function initializeFirebase(): FirebaseSdks {
     }
 
     try {
-      if (firebaseConfig.storageBucket) {
+      // storageBucket が設定されている場合のみ初期化を試みる
+      if (firebaseConfig.storageBucket && firebaseConfig.storageBucket !== '') {
         storage = getStorage(app);
       } else {
-        console.warn("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is missing in environment variables.");
+        console.warn("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is missing. Storage feature will be disabled.");
       }
     } catch (e) {
       console.error("Storage init error:", e);
