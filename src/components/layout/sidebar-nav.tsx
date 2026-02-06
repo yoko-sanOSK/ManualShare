@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Settings, HelpCircle, Tag } from "lucide-react";
+import { LayoutDashboard, Settings, HelpCircle, Tag, Layers } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -30,6 +30,15 @@ function CategoryList() {
 
   return (
     <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={pathname === "/" && !currentCategory}>
+          <Link href="/">
+            <Layers />
+            <span>すべて</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      
       {categories?.map((category) => (
         <SidebarMenuItem key={category.id}>
           <SidebarMenuButton asChild isActive={pathname === "/" && currentCategory === category.name}>
@@ -41,7 +50,7 @@ function CategoryList() {
         </SidebarMenuItem>
       ))}
       {(!categories || categories.length === 0) && (
-        <p className="px-4 text-xs text-muted-foreground italic">カテゴリーなし</p>
+        <p className="px-4 text-xs text-muted-foreground italic mt-2">カテゴリーなし</p>
       )}
     </SidebarMenu>
   );
@@ -65,7 +74,7 @@ export function SidebarNav() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/"}>
+                <SidebarMenuButton asChild isActive={pathname === "/" && !useSearchParams().get('category')}>
                   <Link href="/">
                     <LayoutDashboard />
                     <span>ダッシュボード</span>
