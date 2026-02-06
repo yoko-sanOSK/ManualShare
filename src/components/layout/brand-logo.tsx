@@ -7,13 +7,19 @@ interface BrandLogoProps {
   showText?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  hoverable?: boolean;
 }
 
 /**
  * ManualShare の公式ブランドロゴコンポーネント
  * サイドバーのロゴマークに基づいたデザインを提供します。
  */
-export function BrandLogo({ showText = true, className, size = 'md' }: BrandLogoProps) {
+export function BrandLogo({ 
+  showText = true, 
+  className, 
+  size = 'md',
+  hoverable = true 
+}: BrandLogoProps) {
   const containerSizes = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
@@ -33,9 +39,14 @@ export function BrandLogo({ showText = true, className, size = 'md' }: BrandLogo
   };
 
   return (
-    <div className={cn("flex items-center gap-2.5 group", className)}>
+    <div className={cn(
+      "flex items-center gap-2.5", 
+      hoverable && "group",
+      className
+    )}>
       <div className={cn(
-        "bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm",
+        "bg-primary rounded-lg flex items-center justify-center shadow-sm",
+        hoverable && "group-hover:scale-110 transition-transform",
         containerSizes[size]
       )}>
         <Share2 className={cn("text-white", iconSizes[size])} />
