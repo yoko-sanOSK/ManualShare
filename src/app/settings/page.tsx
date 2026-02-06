@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -110,6 +110,12 @@ export default function SettingsPage() {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleRemoveImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingManual(prev => ({ ...prev!, imageUrl: "" }));
+    toast({ title: "リセット", description: "サムネイルをデフォルトに戻しました。" });
   };
 
   const handleSaveCategory = () => {
@@ -387,6 +393,16 @@ export default function SettingsPage() {
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
                       {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : "変更する"}
                     </div>
+                    {editingManual?.imageUrl && (
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg z-20"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                   <Label>概要</Label>
