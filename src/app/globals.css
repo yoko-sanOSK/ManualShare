@@ -87,3 +87,13 @@
 .prose video {
   @apply mx-auto block max-w-full h-auto rounded-lg my-6 shadow-sm;
 }
+
+/* List bullet color override */
+.prose ul > li::marker {
+  color: #000000 !important;
+}
+
+.prose ol > li::marker {
+  color: #000000 !important;
+  font-weight: bold;
+}
