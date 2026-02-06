@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -244,7 +245,7 @@ export default function SettingsPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-bold truncate text-lg">{manual.title}</h4>
-                            <Badge variant="secondary">{manual.categoryName}</Badge>
+                            <Badge className="bg-primary text-white font-medium">{manual.categoryName}</Badge>
                             {manual.visibilityName && <Badge variant="outline">{manual.visibilityName}</Badge>}
                           </div>
                           <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
