@@ -12,7 +12,7 @@ interface BrandLogoProps {
 
 /**
  * ManualShare の公式ブランドロゴコンポーネント
- * サイドバーのロゴマークに基づいたデザインを提供します。
+ * サイズに応じて角丸の半径を調整し、常に正方形の印象を維持します。
  */
 export function BrandLogo({ 
   showText = true, 
@@ -38,6 +38,13 @@ export function BrandLogo({
     lg: 'text-3xl'
   };
 
+  // サイズに応じて角丸の強度を調整
+  const roundedSizes = {
+    sm: 'rounded-md', // 小さいサイズでは角丸を控えめに
+    md: 'rounded-lg',
+    lg: 'rounded-xl'
+  };
+
   return (
     <div className={cn(
       "flex items-center gap-2.5", 
@@ -45,7 +52,8 @@ export function BrandLogo({
       className
     )}>
       <div className={cn(
-        "bg-primary rounded-lg flex items-center justify-center shadow-sm",
+        "bg-primary flex items-center justify-center shadow-sm",
+        roundedSizes[size],
         hoverable && "group-hover:scale-110 transition-transform",
         containerSizes[size]
       )}>
