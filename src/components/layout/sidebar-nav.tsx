@@ -19,13 +19,43 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { BrandLogo } from "./brand-logo";
 
+/**
+ * メインメニュー項目（Dashboard）
+ * useSearchParams を使用するため、呼び出し元で Suspense で囲む必要があります。
+ */
+function MainMenu() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isDashboardActive = pathname === "/" && !searchParams.get('category');
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isDashboardActive}>
+          <Link href="/">
+            <LayoutDashboard />
+            <span>ダッシュボード</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+/**
+ * カテゴリー一覧項目
+ * useSearchParams を使用するため、呼び出し元で Suspense で囲む必要があります。
+ */
 function CategoryList() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get('category');
   
   const firestore = useFirestore();
-  const categoriesRef = useMemoFirebase(() => collection(firestore!, "categories"), [firestore]);
+  const categoriesRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "categories");
+  }, [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
   return (
@@ -56,6 +86,9 @@ function CategoryList() {
   );
 }
 
+/**
+ * アプリケーション全体のサイドバーナビゲーション
+ */
 export function SidebarNav() {
   const pathname = usePathname();
 
@@ -72,16 +105,9 @@ export function SidebarNav() {
             メイン
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/" && !useSearchParams().get('category')}>
-                  <Link href="/">
-                    <LayoutDashboard />
-                    <span>ダッシュボード</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <Suspense fallback={<div className="h-8 w-full bg-muted animate-pulse rounded-md mx-2" />}>
+              <MainMenu />
+            </Suspense>
           </SidebarGroupContent>
         </SidebarGroup>
 
