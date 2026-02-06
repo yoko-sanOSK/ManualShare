@@ -9,7 +9,7 @@ import { collectionGroup } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Calendar, User, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -112,10 +112,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>更新日: {manual?.lastUpdated || "不明"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span>作成者: 管理チーム</span>
                 </div>
               </div>
 
