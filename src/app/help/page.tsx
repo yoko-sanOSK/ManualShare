@@ -21,7 +21,7 @@ export default function HelpCenterPage() {
 
           <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
             <div className="flex flex-col items-center text-center mb-12">
-              <BrandLogo size="lg" className="mb-6" />
+              <BrandLogo size="lg" className="mb-6" hoverable={false} />
               <h2 className="text-3xl font-headline font-bold mb-4">ManualShare ガイド</h2>
               <p className="text-muted-foreground max-w-lg">
                 リッチテキストエディタによる高度なマニュアル管理のガイドです。直感的な操作でナレッジを蓄積しましょう。

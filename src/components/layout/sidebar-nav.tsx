@@ -54,7 +54,7 @@ export function SidebarNav() {
     <Sidebar variant="sidebar" className="border-r border-border/50">
       <SidebarHeader className="py-6 px-6">
         <Link href="/">
-          <BrandLogo />
+          <BrandLogo hoverable={false} />
         </Link>
       </SidebarHeader>
       <SidebarContent>
