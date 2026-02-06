@@ -5,7 +5,7 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Settings, FilePlus, Save, Layout } from "lucide-react";
+import { Settings, FilePlus, Save, Layout, Link as LinkIcon } from "lucide-react";
 import { BrandLogo } from "@/components/layout/brand-logo";
 
 export default function HelpCenterPage() {
@@ -37,7 +37,7 @@ export default function HelpCenterPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm leading-relaxed text-muted-foreground">
-                  現在は画像の埋め込みに対応しており、視覚的に分かりやすいマニュアルを作成できます。動画機能は順次導入予定です。
+                  画像やリンクの埋め込みに対応しており、視覚的に分かりやすいマニュアルを作成できます。動画機能は順次導入予定です。
                 </CardContent>
               </Card>
             </div>
@@ -54,15 +54,33 @@ export default function HelpCenterPage() {
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
-                      <FilePlus className="w-4 h-4" /> 2. 記事作成とメディア挿入
+                      <FilePlus className="w-4 h-4" /> 2. 記事作成と編集
                     </p>
-                    <p className="text-sm pl-6">エディタのツールバーを使い、画像をPCからアップロードして挿入します。</p>
+                    <p className="text-sm pl-6">エディタのツールバーを使い、画像の挿入やテキストの装飾（太字・下線・リンクなど）を行います。</p>
                   </div>
                   <div className="space-y-2">
                     <p className="font-medium text-primary flex items-center gap-2">
                       <Save className="w-4 h-4" /> 3. キャンセルと保存
                     </p>
                     <p className="text-sm pl-6">「キャンセル」で戻るか、「保存して公開」で全社に共有します。</p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3">
+                <AccordionTrigger className="font-headline font-bold">リンクの挿入方法</AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3 text-sm">
+                  <div className="flex flex-col gap-2">
+                    <p className="font-bold text-foreground flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4" /> 操作手順:
+                    </p>
+                    <ol className="list-decimal pl-5 space-y-1">
+                      <li>エディタ内で、リンクを設定したいテキストをマウスでドラッグして選択します。</li>
+                      <li>ツールバーの鎖のようなアイコン「リンクを挿入」をクリックします。</li>
+                      <li>URLの入力ダイアログが表示されるので、リンク先のURL（例: https://example.com）を入力します。</li>
+                      <li>Enterキーを押すか、OKを選択するとテキストにリンクが設定されます。</li>
+                    </ol>
+                    <p className="text-xs text-muted-foreground mt-2 italic">※ 設定済みのリンクを解除したい場合は、リンク箇所を選択して再度リンクアイコンをクリックし、URLを空にして保存してください。</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
