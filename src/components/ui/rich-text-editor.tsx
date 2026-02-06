@@ -1,12 +1,17 @@
+
 "use client";
 
 import { useEditor, EditorContent, Node, mergeAttributes } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TiptapImage from "@tiptap/extension-image";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
 import { Button } from "@/components/ui/button";
 import { 
   Bold, 
   Italic, 
+  Underline as UnderlineIcon,
+  Link as LinkIcon,
   List, 
   ListOrdered, 
   Heading1, 
@@ -19,7 +24,7 @@ import {
   Film,
   Loader2
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -135,6 +140,22 @@ const MenuBar = ({ editor }: { editor: any }) => {
     e.target.value = '';
   };
 
+  const setLink = useCallback(() => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URLを入力してください:', previousUrl);
+
+    if (url === null) {
+      return;
+    }
+
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
+
   const notifyVideoComingSoon = () => {
     toast({
       title: "導入予定の機能",
@@ -157,6 +178,20 @@ const MenuBar = ({ editor }: { editor: any }) => {
       isActive: () => editor.isActive("italic"),
       disabled: () => !editor.can().chain().focus().toggleItalic().run(),
     },
+    {
+      icon: <UnderlineIcon className="h-4 w-4" />,
+      title: "下線",
+      action: () => editor.chain().focus().toggleUnderline().run(),
+      isActive: () => editor.isActive("underline"),
+      disabled: () => !editor.can().chain().focus().toggleUnderline().run(),
+    },
+    {
+      icon: <LinkIcon className="h-4 w-4" />,
+      title: "リンクを挿入",
+      action: setLink,
+      isActive: () => editor.isActive("link"),
+    },
+    { type: "divider" },
     {
       icon: <Heading1 className="h-4 w-4" />,
       title: "見出し 1",
@@ -280,6 +315,13 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
+        },
+      }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline cursor-pointer',
         },
       }),
       TiptapImage.configure({
