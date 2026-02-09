@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, Suspense } from "react";
@@ -90,6 +91,10 @@ function HomeContent() {
   const filteredManuals = useMemo(() => {
     if (!manuals) return [];
     return manuals.filter((manual) => {
+      // 公開ステータスのものだけ表示（statusが存在しない古いデータは表示対象とする）
+      const isPublished = !manual.status || manual.status === 'published';
+      if (!isPublished) return false;
+
       const matchesSearch = manual.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           manual.description?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory ? manual.categoryName === activeCategory : true;

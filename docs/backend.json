@@ -23,6 +23,11 @@
           "type": "string",
           "description": "Reference to Category."
         },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"],
+          "description": "The publication status of the manual."
+        },
         "summary": {
           "type": "string",
           "description": "AI-generated summary."
@@ -50,7 +55,8 @@
         "id",
         "title",
         "content",
-        "categoryId"
+        "categoryId",
+        "status"
       ]
     },
     "Category": {

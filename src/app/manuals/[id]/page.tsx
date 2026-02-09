@@ -10,7 +10,7 @@ import { collectionGroup } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, AlertCircle, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -63,7 +63,10 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  if (!manual && !isLoading && manuals) {
+  // マニュアルが存在しない、または下書き状態の場合は404を表示（管理者以外）
+  const isDraft = manual?.status === 'draft';
+  if ((!manual && !isLoading && manuals) || (isDraft && manual)) {
+    // 下書きの記事は詳細ページも閲覧不可にする（簡易的な実装。本来は管理者権限チェックが必要）
     notFound();
   }
 

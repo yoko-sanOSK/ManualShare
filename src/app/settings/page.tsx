@@ -13,18 +13,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff, EyeOff, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { verifyAdminPassword } from "@/app/actions/admin-auth";
 import { uploadFileAction } from "@/app/actions/upload-action";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+type ManualStatus = 'published' | 'draft';
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -67,6 +70,7 @@ export default function SettingsPage() {
     categoryId: string;
     description: string;
     imageUrl?: string;
+    status: ManualStatus;
   } | null>(null);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -136,7 +140,10 @@ export default function SettingsPage() {
 
     setDocumentNonBlocking(manualDocRef, data, { merge: true });
     setIsManualDialogOpen(false);
-    toast({ title: "保存しました", description: `「${editingManual.title}」を公開しました。` });
+    toast({ 
+      title: editingManual.status === 'published' ? "公開しました" : "下書き保存しました", 
+      description: `「${editingManual.title}」を保存しました。` 
+    });
   };
 
   if (!mounted) return null;
@@ -232,7 +239,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <Button onClick={() => {
-                    setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", imageUrl: "" });
+                    setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", imageUrl: "", status: "published" });
                     setIsManualDialogOpen(true);
                   }} disabled={!categories?.length} className="font-bold w-full sm:w-auto">
                     <Plus className="w-5 h-5 mr-2" /> 新しい記事を作成
@@ -251,6 +258,11 @@ export default function SettingsPage() {
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                               <h4 className="font-bold truncate text-base sm:text-lg max-w-[200px] sm:max-w-none">{manual.title}</h4>
                               <Badge className="bg-primary text-white font-medium whitespace-nowrap">{manual.categoryName}</Badge>
+                              {manual.status === 'draft' && (
+                                <Badge variant="outline" className="text-muted-foreground gap-1 border-muted-foreground/30">
+                                  <EyeOff className="w-3 h-3" /> 下書き
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
                           </div>
@@ -328,7 +340,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => setIsManualDialogOpen(false)} className="font-bold">キャンセル</Button>
-              <Button size="sm" onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
+              <Button size="sm" onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して適用</Button>
             </div>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-muted/20">
@@ -339,33 +351,68 @@ export default function SettingsPage() {
                   <RichTextEditor content={editingManual?.content || ""} onChange={(html) => setEditingManual(prev => ({ ...prev!, content: html }))} />
                 </Card>
               </div>
-              <div className="lg:col-span-1 space-y-4">
-                <Card className="p-4 space-y-4">
-                  <Label>カテゴリー</Label>
-                  <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Label>サムネイル</Label>
-                  <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer bg-muted" onClick={() => fileInputRef.current?.click()}>
-                    <Image src={editingManual?.imageUrl || defaultLogoUrl} fill className="object-cover" alt="" unoptimized />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 lg:group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
-                      {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : "変更する"}
-                    </div>
-                    {editingManual?.imageUrl && (
-                      <Button 
-                        variant="destructive" 
-                        size="icon" 
-                        className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg z-20"
-                        onClick={handleRemoveImage}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="p-4 space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">公開設定</Label>
+                    <RadioGroup 
+                      value={editingManual?.status} 
+                      onValueChange={(val) => setEditingManual(prev => ({ ...prev!, status: val as ManualStatus }))}
+                      className="grid gap-2"
+                    >
+                      <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <RadioGroupItem value="published" id="published" />
+                        <Label htmlFor="published" className="flex-1 cursor-pointer font-bold flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-primary" /> 公開
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <RadioGroupItem value="draft" id="draft" />
+                        <Label htmlFor="draft" className="flex-1 cursor-pointer font-bold flex items-center gap-2">
+                          <EyeOff className="w-4 h-4 text-muted-foreground" /> 下書き
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                  <Label>概要</Label>
-                  <Textarea value={editingManual?.description || ""} onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))} />
+
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">カテゴリー</Label>
+                    <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">サムネイル</Label>
+                    <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer bg-muted" onClick={() => fileInputRef.current?.click()}>
+                      <Image src={editingManual?.imageUrl || defaultLogoUrl} fill className="object-cover" alt="" unoptimized />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 lg:group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
+                        {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : "変更する"}
+                      </div>
+                      {editingManual?.imageUrl && (
+                        <Button 
+                          variant="destructive" 
+                          size="icon" 
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg z-20"
+                          onClick={handleRemoveImage}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">概要</Label>
+                    <Textarea 
+                      value={editingManual?.description || ""} 
+                      onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))} 
+                      className="min-h-[100px] text-sm"
+                      placeholder="記事の簡単な説明を入力..."
+                    />
+                  </div>
                 </Card>
               </div>
             </div>
