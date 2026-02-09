@@ -98,9 +98,6 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
               <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8">
                 <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
                   <Badge className="bg-primary text-white text-[10px] sm:text-sm py-0.5 sm:py-1 px-2 sm:px-3 shadow-sm">{manual?.categoryName}</Badge>
-                  <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm text-[10px] sm:text-sm py-0.5 sm:py-1 px-2 sm:px-3 shadow-sm">
-                    {manual?.visibilityName || "全社公開"}
-                  </Badge>
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-headline font-bold text-white leading-tight drop-shadow-md">
                   {manual?.title}

@@ -50,12 +50,6 @@ export default function SettingsPage() {
   }, [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
-  const visibilitiesRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, "visibility_options");
-  }, [firestore]);
-  const { data: visibilities } = useCollection(visibilitiesRef);
-
   const manualsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return collectionGroup(firestore, "manuals");
@@ -65,16 +59,12 @@ export default function SettingsPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string, name: string, description: string } | null>(null);
 
-  const [isVisibilityDialogOpen, setIsVisibilityDialogOpen] = useState(false);
-  const [editingVisibility, setEditingVisibility] = useState<{ id?: string, name: string } | null>(null);
-
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [editingManual, setEditingManual] = useState<{
     id?: string;
     title: string;
     content: string;
     categoryId: string;
-    visibilityId?: string;
     description: string;
     imageUrl?: string;
   } | null>(null);
@@ -128,18 +118,10 @@ export default function SettingsPage() {
     setIsCategoryDialogOpen(false);
   };
 
-  const handleSaveVisibility = () => {
-    if (!editingVisibility?.name || !firestore || !visibilitiesRef) return;
-    const id = editingVisibility.id || doc(visibilitiesRef).id;
-    setDocumentNonBlocking(doc(firestore, "visibility_options", id), { id, ...editingVisibility }, { merge: true });
-    setIsVisibilityDialogOpen(false);
-  };
-
   const handleSaveManual = () => {
     if (!editingManual?.title || !editingManual?.categoryId || !firestore) return;
     
     const category = categories?.find(c => c.id === editingManual.categoryId);
-    const visibility = visibilities?.find(v => v.id === editingManual.visibilityId);
     
     const manualId = editingManual.id || doc(collection(firestore, `categories/${editingManual.categoryId}/manuals`)).id;
     const manualDocRef = doc(firestore, "categories", editingManual.categoryId, "manuals", manualId);
@@ -148,7 +130,6 @@ export default function SettingsPage() {
       ...editingManual,
       id: manualId,
       categoryName: category?.name || "未分類",
-      visibilityName: visibility?.name || "未設定",
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString().split('T')[0],
     };
@@ -160,7 +141,6 @@ export default function SettingsPage() {
 
   if (!mounted) return null;
 
-  // スマートフォン（768px未満）の制限
   if (isMobile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background text-center">
@@ -233,14 +213,13 @@ export default function SettingsPage() {
           <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-6xl mx-auto w-full">
             <div className="mb-8 text-center md:text-left">
               <h2 className="text-3xl font-headline font-bold mb-2">管理ダッシュボード</h2>
-              <p className="text-muted-foreground">記事、カテゴリー、公開範囲を自在にカスタマイズできます。</p>
+              <p className="text-muted-foreground">記事、カテゴリーを自在にカスタマイズできます。</p>
             </div>
 
             <Tabs defaultValue="manuals" className="space-y-6">
               <TabsList className="bg-muted/50 p-1 flex-wrap h-auto">
                 <TabsTrigger value="manuals" className="flex items-center gap-2"><FileText className="w-4 h-4" /> マニュアル記事</TabsTrigger>
                 <TabsTrigger value="categories" className="flex items-center gap-2"><Tag className="w-4 h-4" /> カテゴリー</TabsTrigger>
-                <TabsTrigger value="visibility" className="flex items-center gap-2"><FileText className="w-4 h-4" /> 公開範囲</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manuals" className="space-y-6">
@@ -271,10 +250,7 @@ export default function SettingsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                               <h4 className="font-bold truncate text-base sm:text-lg max-w-[200px] sm:max-w-none">{manual.title}</h4>
-                              <div className="flex gap-1">
-                                <Badge className="bg-primary text-white font-medium whitespace-nowrap">{manual.categoryName}</Badge>
-                                {manual.visibilityName && <Badge variant="outline" className="whitespace-nowrap">{manual.visibilityName}</Badge>}
-                              </div>
+                              <Badge className="bg-primary text-white font-medium whitespace-nowrap">{manual.categoryName}</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
                           </div>
@@ -321,34 +297,6 @@ export default function SettingsPage() {
                   ))}
                 </div>
               </TabsContent>
-
-              <TabsContent value="visibility" className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold">公開範囲設定</h3>
-                  <Button variant="outline" onClick={() => { setEditingVisibility({ name: "" }); setIsVisibilityDialogOpen(true); }} className="font-bold">
-                    <Plus className="w-4 h-4 mr-2" /> 範囲を追加
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {visibilities?.map((vis) => (
-                    <Card key={vis.id}>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex justify-between items-center">
-                          <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-primary" />{vis.name}</div>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingVisibility(vis); setIsVisibilityDialogOpen(true); }}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => firestore && deleteDocumentNonBlocking(doc(firestore, "visibility_options", vis.id))}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
             </Tabs>
           </main>
           <Footer />
@@ -368,20 +316,6 @@ export default function SettingsPage() {
             <Textarea value={editingCategory?.description || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, description: e.target.value }))} />
           </div>
           <DialogFooter><Button onClick={handleSaveCategory} className="font-bold w-full sm:w-auto">保存</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isVisibilityDialogOpen} onOpenChange={setIsVisibilityDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>公開範囲編集</DialogTitle>
-            <DialogDescription>マニュアルを表示できる権限の範囲を定義します。</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Label>範囲名</Label>
-            <Input value={editingVisibility?.name || ""} placeholder="例: 全社公開, 役員限定" onChange={(e) => setEditingVisibility(prev => ({ ...prev!, name: e.target.value }))} />
-          </div>
-          <DialogFooter><Button onClick={handleSaveVisibility} className="font-bold w-full sm:w-auto">保存</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -411,11 +345,6 @@ export default function SettingsPage() {
                   <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Label>公開範囲</Label>
-                  <Select value={editingManual?.visibilityId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, visibilityId: val }))}>
-                    <SelectTrigger><SelectValue placeholder="公開範囲を選択" /></SelectTrigger>
-                    <SelectContent>{visibilities?.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
                   </Select>
                   <Label>サムネイル</Label>
                   <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer bg-muted" onClick={() => fileInputRef.current?.click()}>

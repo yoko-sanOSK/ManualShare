@@ -23,10 +23,6 @@
           "type": "string",
           "description": "Reference to Category."
         },
-        "visibilityId": {
-          "type": "string",
-          "description": "Reference to VisibilityOption."
-        },
         "summary": {
           "type": "string",
           "description": "AI-generated summary."
@@ -40,7 +36,6 @@
           "description": "Short summary/description of the manual."
         },
         "categoryName": { "type": "string" },
-        "visibilityName": { "type": "string" },
         "lastUpdated": { "type": "string" },
         "createdAt": {
           "type": "string",
@@ -68,17 +63,6 @@
         "description": { "type": "string" }
       },
       "required": ["id", "name"]
-    },
-    "VisibilityOption": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "VisibilityOption",
-      "type": "object",
-      "description": "マニュアルの公開範囲を定義するエンティティ。",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string", "description": "公開範囲の表示名" }
-      },
-      "required": ["id", "name"]
     }
   },
   "auth": {
@@ -93,10 +77,6 @@
       {
         "path": "/categories/{categoryId}/manuals/{manualId}",
         "definition": { "entityName": "Manual", "schema": { "$ref": "#/backend/entities/Manual" }, "description": "マニュアル情報" }
-      },
-      {
-        "path": "/visibility_options/{optionId}",
-        "definition": { "entityName": "VisibilityOption", "schema": { "$ref": "#/backend/entities/VisibilityOption" }, "description": "公開範囲の設定オプション" }
       }
     ]
   }
