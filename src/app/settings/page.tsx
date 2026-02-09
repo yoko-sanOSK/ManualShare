@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -160,38 +159,31 @@ export default function SettingsPage() {
 
   if (!isAuthenticated) {
     return (
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
-          <SidebarNav />
-          <SidebarInset>
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-6">
-              <BrandLogo size="lg" className="mb-10" hoverable={false} />
-              <Card className="max-w-md w-full shadow-lg border-primary/20">
-                <CardHeader className="text-center">
-                  <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                    <Lock className="text-primary w-8 h-8" />
-                  </div>
-                  <CardTitle className="text-2xl font-headline font-bold">記事管理の認証</CardTitle>
-                  <CardDescription>管理機能にアクセスするには、管理者パスワードを入力してください。</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleAuth}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="password">パスワード</Label>
-                      <Input id="password" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="管理者パスワード" required autoFocus />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full font-bold" disabled={isVerifying}>
-                      {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "ログイン"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
+      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background">
+        <BrandLogo size="lg" className="mb-10" hoverable={false} />
+        <Card className="max-w-md w-full shadow-lg border-primary/20">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <Lock className="text-primary w-8 h-8" />
             </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+            <CardTitle className="text-2xl font-headline font-bold">記事管理の認証</CardTitle>
+            <CardDescription>管理機能にアクセスするには、管理者パスワードを入力してください。</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleAuth}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">パスワード</Label>
+                <Input id="password" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="管理者パスワード" required autoFocus />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full font-bold" disabled={isVerifying}>
+                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "ログイン"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     );
   }
 
