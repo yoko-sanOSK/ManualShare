@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,11 +24,13 @@ import Image from "next/image";
 import { verifyAdminPassword } from "@/app/actions/admin-auth";
 import { uploadFileAction } from "@/app/actions/upload-action";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -79,7 +82,6 @@ export default function SettingsPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    // 記事管理用パスワード（デフォルト: admin）で検証
     const success = await verifyAdminPassword(passwordInput);
     if (success) {
       setIsAuthenticated(true);
@@ -158,6 +160,36 @@ export default function SettingsPage() {
 
   if (!mounted) return null;
 
+  // スマートフォン（768px未満）の制限
+  if (isMobile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background text-center">
+        <BrandLogo size="lg" className="mb-10" hoverable={false} />
+        <Card className="max-w-md w-full shadow-lg border-primary/20">
+          <CardHeader>
+            <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <MonitorOff className="text-primary w-8 h-8" />
+            </div>
+            <CardTitle className="text-2xl font-headline font-bold">PC版をご利用ください</CardTitle>
+            <CardDescription>
+              記事管理機能は、大きな画面での操作に最適化されています。スマートフォン(縦画面)での編集は制限されています。
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              記事の作成、編集、削除を行うには、PCまたはタブレット（横画面）からアクセスしてください。
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" className="w-full" onClick={() => window.location.href = "/"}>
+              ダッシュボードへ戻る
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background">
@@ -205,14 +237,14 @@ export default function SettingsPage() {
             </div>
 
             <Tabs defaultValue="manuals" className="space-y-6">
-              <TabsList className="bg-muted/50 p-1">
+              <TabsList className="bg-muted/50 p-1 flex-wrap h-auto">
                 <TabsTrigger value="manuals" className="flex items-center gap-2"><FileText className="w-4 h-4" /> マニュアル記事</TabsTrigger>
                 <TabsTrigger value="categories" className="flex items-center gap-2"><Tag className="w-4 h-4" /> カテゴリー</TabsTrigger>
                 <TabsTrigger value="visibility" className="flex items-center gap-2"><FileText className="w-4 h-4" /> 公開範囲</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manuals" className="space-y-6">
-                <div className="flex items-center justify-between bg-card p-6 rounded-xl border shadow-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-between bg-card p-6 rounded-xl border shadow-sm gap-4">
                   <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-xl text-primary"><Layout className="w-6 h-6" /></div>
                     <div>
@@ -223,7 +255,7 @@ export default function SettingsPage() {
                   <Button onClick={() => {
                     setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", imageUrl: "" });
                     setIsManualDialogOpen(true);
-                  }} disabled={!categories?.length} className="font-bold">
+                  }} disabled={!categories?.length} className="font-bold w-full sm:w-auto">
                     <Plus className="w-5 h-5 mr-2" /> 新しい記事を作成
                   </Button>
                 </div>
@@ -231,19 +263,23 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 gap-4">
                   {manuals?.map((manual) => (
                     <Card key={manual.id} className="group hover:border-primary/50 transition-all shadow-sm">
-                      <CardContent className="p-4 flex items-center">
-                        <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4 border">
-                          <Image src={manual.imageUrl || defaultLogoUrl} alt="" fill className="object-cover" unoptimized />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-bold truncate text-lg">{manual.title}</h4>
-                            <Badge className="bg-primary text-white font-medium">{manual.categoryName}</Badge>
-                            {manual.visibilityName && <Badge variant="outline">{manual.visibilityName}</Badge>}
+                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center">
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4 border">
+                            <Image src={manual.imageUrl || defaultLogoUrl} alt="" fill className="object-cover" unoptimized />
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h4 className="font-bold truncate text-base sm:text-lg max-w-[200px] sm:max-w-none">{manual.title}</h4>
+                              <div className="flex gap-1">
+                                <Badge className="bg-primary text-white font-medium whitespace-nowrap">{manual.categoryName}</Badge>
+                                {manual.visibilityName && <Badge variant="outline" className="whitespace-nowrap">{manual.visibilityName}</Badge>}
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-1">{manual.description}</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 justify-end mt-4 sm:mt-0">
                           <Button variant="ghost" size="icon" onClick={() => { setEditingManual(manual as any); setIsManualDialogOpen(true); }}>
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -264,7 +300,7 @@ export default function SettingsPage() {
                     <Plus className="w-4 h-4 mr-2" /> カテゴリー追加
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {categories?.map((cat) => (
                     <Card key={cat.id}>
                       <CardHeader className="pb-2">
@@ -293,7 +329,7 @@ export default function SettingsPage() {
                     <Plus className="w-4 h-4 mr-2" /> 範囲を追加
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {visibilities?.map((vis) => (
                     <Card key={vis.id}>
                       <CardHeader className="pb-2">
@@ -320,7 +356,7 @@ export default function SettingsPage() {
       </div>
 
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>カテゴリー編集</DialogTitle>
             <DialogDescription>カテゴリーの名称と詳細な説明を入力してください。</DialogDescription>
@@ -331,12 +367,12 @@ export default function SettingsPage() {
             <Label>説明</Label>
             <Textarea value={editingCategory?.description || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, description: e.target.value }))} />
           </div>
-          <DialogFooter><Button onClick={handleSaveCategory} className="font-bold">保存</Button></DialogFooter>
+          <DialogFooter><Button onClick={handleSaveCategory} className="font-bold w-full sm:w-auto">保存</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isVisibilityDialogOpen} onOpenChange={setIsVisibilityDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>公開範囲編集</DialogTitle>
             <DialogDescription>マニュアルを表示できる権限の範囲を定義します。</DialogDescription>
@@ -345,31 +381,31 @@ export default function SettingsPage() {
             <Label>範囲名</Label>
             <Input value={editingVisibility?.name || ""} placeholder="例: 全社公開, 役員限定" onChange={(e) => setEditingVisibility(prev => ({ ...prev!, name: e.target.value }))} />
           </div>
-          <DialogFooter><Button onClick={handleSaveVisibility} className="font-bold">保存</Button></DialogFooter>
+          <DialogFooter><Button onClick={handleSaveVisibility} className="font-bold w-full sm:w-auto">保存</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
-        <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
-          <DialogHeader className="px-6 py-4 border-b flex justify-between items-center bg-card">
+        <DialogContent className="max-w-[95vw] lg:max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
+          <DialogHeader className="px-4 sm:px-6 py-4 border-b flex flex-row justify-between items-center bg-card">
             <div>
-              <DialogTitle className="font-bold text-lg">記事編集</DialogTitle>
+              <DialogTitle className="font-bold text-base sm:text-lg">記事編集</DialogTitle>
               <DialogDescription className="sr-only">記事の内容、カテゴリー、サムネイルなどを編集します。</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setIsManualDialogOpen(false)} className="font-bold">キャンセル</Button>
-              <Button onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
+              <Button variant="ghost" size="sm" onClick={() => setIsManualDialogOpen(false)} className="font-bold">キャンセル</Button>
+              <Button size="sm" onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して公開</Button>
             </div>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-6 bg-muted/20">
-            <div className="grid grid-cols-4 gap-8">
-              <div className="col-span-3 space-y-6">
-                <Card className="p-6">
-                  <Input className="text-3xl font-bold border-none px-0 focus-visible:ring-0 mb-4" value={editingManual?.title || ""} onChange={(e) => setEditingManual(prev => ({ ...prev!, title: e.target.value }))} placeholder="タイトルを入力..." />
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-muted/20">
+            <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 sm:gap-8">
+              <div className="lg:col-span-3 space-y-6">
+                <Card className="p-4 sm:p-6">
+                  <Input className="text-xl sm:text-3xl font-bold border-none px-0 focus-visible:ring-0 mb-4" value={editingManual?.title || ""} onChange={(e) => setEditingManual(prev => ({ ...prev!, title: e.target.value }))} placeholder="タイトルを入力..." />
                   <RichTextEditor content={editingManual?.content || ""} onChange={(html) => setEditingManual(prev => ({ ...prev!, content: html }))} />
                 </Card>
               </div>
-              <div className="col-span-1 space-y-4">
+              <div className="lg:col-span-1 space-y-4">
                 <Card className="p-4 space-y-4">
                   <Label>カテゴリー</Label>
                   <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
@@ -384,7 +420,7 @@ export default function SettingsPage() {
                   <Label>サムネイル</Label>
                   <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer bg-muted" onClick={() => fileInputRef.current?.click()}>
                     <Image src={editingManual?.imageUrl || defaultLogoUrl} fill className="object-cover" alt="" unoptimized />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 lg:group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
                       {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : "変更する"}
                     </div>
                     {editingManual?.imageUrl && (

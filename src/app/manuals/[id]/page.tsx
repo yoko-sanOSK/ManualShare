@@ -1,3 +1,4 @@
+
 "use client";
 
 import { use, useMemo } from "react";
@@ -71,20 +72,20 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
       <div className="flex min-h-screen w-full bg-background">
         <SidebarNav />
         <SidebarInset className="flex flex-col">
-          <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-6 shadow-sm">
+          <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-4 sm:px-6 shadow-sm">
             <SidebarTrigger />
             <div className="flex items-center gap-4 ml-2">
               <Link href="/">
-                <Button variant="ghost" size="sm" className="text-foreground font-semibold hover:text-primary transition-colors">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  ダッシュボードへ戻る
+                <Button variant="ghost" size="sm" className="text-foreground font-semibold hover:text-primary transition-colors h-9 px-2 sm:px-3">
+                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm">戻る</span>
                 </Button>
               </Link>
             </div>
           </header>
 
-          <main className="flex-1 p-6 md:p-8 lg:p-12 max-w-5xl mx-auto w-full">
-            <div className="relative h-64 md:h-96 w-full rounded-2xl overflow-hidden mb-8 shadow-lg">
+          <main className="flex-1 p-4 sm:p-6 md:p-8 lg:p-12 max-w-5xl mx-auto w-full">
+            <div className="relative h-48 sm:h-64 md:h-96 w-full rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 shadow-lg">
               <Image
                 src={manual?.imageUrl || defaultImageUrl}
                 alt={manual?.title || "Manual"}
@@ -93,31 +94,31 @@ export default function ManualDetailPage({ params }: { params: Promise<{ id: str
                 priority
                 unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge className="bg-primary text-white text-sm py-1 px-3 shadow-sm">{manual?.categoryName}</Badge>
-                  <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm text-sm py-1 px-3 shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8">
+                <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
+                  <Badge className="bg-primary text-white text-[10px] sm:text-sm py-0.5 sm:py-1 px-2 sm:px-3 shadow-sm">{manual?.categoryName}</Badge>
+                  <Badge variant="outline" className="bg-white/20 text-white border-white/40 backdrop-blur-sm text-[10px] sm:text-sm py-0.5 sm:py-1 px-2 sm:px-3 shadow-sm">
                     {manual?.visibilityName || "全社公開"}
                   </Badge>
                 </div>
-                <h1 className="text-3xl md:text-5xl font-headline font-bold text-white leading-tight drop-shadow-md">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-headline font-bold text-white leading-tight drop-shadow-md">
                   {manual?.title}
                 </h1>
               </div>
             </div>
 
-            <div className="space-y-8">
-              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground border-b pb-6">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>更新日: {manual?.lastUpdated || "不明"}</span>
+            <div className="space-y-6 sm:space-y-8">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] sm:text-sm text-muted-foreground border-b pb-4 sm:pb-6">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>最終更新: {manual?.lastUpdated || "不明"}</span>
                 </div>
               </div>
 
-              <div className="prose prose-blue max-w-none dark:prose-invert">
+              <div className="prose prose-sm sm:prose-base prose-blue max-w-none dark:prose-invert">
                 <div 
-                  className="text-foreground text-lg leading-relaxed"
+                  className="text-foreground text-base sm:text-lg leading-relaxed break-words"
                   dangerouslySetInnerHTML={{ __html: manual?.content || "" }}
                 />
               </div>
