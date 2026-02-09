@@ -18,6 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 import { verifyAccessPassword } from "@/app/actions/admin-auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
 
+const ACCESS_SESSION_KEY = "manualshare_access_session_v1";
+const SESSION_DURATION_MS = 5 * 60 * 1000; // 5分
+
 function HomeContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category");
@@ -27,7 +30,7 @@ function HomeContent() {
   const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
   
   // 認証ステート
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null は初期チェック中
   const [passwordInput, setPasswordInput] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -45,6 +48,23 @@ function HomeContent() {
   }, [firestore]);
   const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
 
+  // セッションのチェック
+  useEffect(() => {
+    const storedSession = localStorage.getItem(ACCESS_SESSION_KEY);
+    if (storedSession) {
+      const { timestamp } = JSON.parse(storedSession);
+      const now = Date.now();
+      if (now - timestamp < SESSION_DURATION_MS) {
+        setIsAuthenticated(true);
+      } else {
+        localStorage.removeItem(ACCESS_SESSION_KEY);
+        setIsAuthenticated(false);
+      }
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, []);
+
   useEffect(() => {
     setActiveCategory(searchParams.get("category"));
   }, [searchParams]);
@@ -52,9 +72,10 @@ function HomeContent() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    // ホーム画面用パスワード（デフォルト: test）で検証
     const success = await verifyAccessPassword(passwordInput);
     if (success) {
+      // 成功時にタイムスタンプを保存
+      localStorage.setItem(ACCESS_SESSION_KEY, JSON.stringify({ timestamp: Date.now() }));
       setIsAuthenticated(true);
     } else {
       toast({ 
@@ -75,6 +96,15 @@ function HomeContent() {
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, activeCategory, manuals]);
+
+  // 初期ロード中
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
