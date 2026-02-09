@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { verifyAdminPassword } from "@/app/actions/admin-auth";
+import { verifyAccessPassword } from "@/app/actions/admin-auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
 
 function HomeContent() {
@@ -52,13 +52,14 @@ function HomeContent() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    const success = await verifyAdminPassword(passwordInput);
+    // ホーム画面用パスワード（デフォルト: test）で検証
+    const success = await verifyAccessPassword(passwordInput);
     if (success) {
       setIsAuthenticated(true);
     } else {
       toast({ 
         title: "認証失敗", 
-        description: "パスワードが正しくありません。", 
+        description: "アクセスパスワードが正しくありません。", 
         variant: "destructive" 
       });
     }
@@ -90,7 +91,7 @@ function HomeContent() {
           <form onSubmit={handleAuth}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">パスワード</Label>
+                <Label htmlFor="password">アクセスパスワード</Label>
                 <Input 
                   id="password" 
                   type="password" 

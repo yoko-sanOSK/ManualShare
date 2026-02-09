@@ -79,11 +79,12 @@ export default function SettingsPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
+    // 記事管理用パスワード（デフォルト: admin）で検証
     const success = await verifyAdminPassword(passwordInput);
     if (success) {
       setIsAuthenticated(true);
     } else {
-      toast({ title: "認証失敗", description: "パスワードが正しくありません。", variant: "destructive" });
+      toast({ title: "認証失敗", description: "管理者パスワードが正しくありません。", variant: "destructive" });
     }
     setIsVerifying(false);
   };
@@ -172,7 +173,7 @@ export default function SettingsPage() {
           <form onSubmit={handleAuth}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">パスワード</Label>
+                <Label htmlFor="password">管理者パスワード</Label>
                 <Input id="password" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="管理者パスワード" required autoFocus />
               </div>
             </CardContent>

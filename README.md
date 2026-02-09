@@ -40,8 +40,9 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-# Admin Authentication
-ADMIN_PASSWORD=admin
+# 認証設定
+ACCESS_PASSWORD=test    # サイト閲覧用（ホーム画面）
+ADMIN_PASSWORD=admin    # 記事管理用
 
 # Vercel Blob (Production only)
 BLOB_READ_WRITE_TOKEN=your_token
@@ -55,7 +56,7 @@ npm run dev
 
 ## 🔒 セキュリティに関する重要事項
 
-- 管理者パスワード (`ADMIN_PASSWORD`) は、デプロイ時に必ず推測困難なものに変更してください。
+- パスワード（`ACCESS_PASSWORD`, `ADMIN_PASSWORD`）は、デプロイ時に必ず推測困難なものに変更してください。
 - APIキーを公開リポジトリに含める場合は、Google Cloud Console で「ウェブサイトの制限」を設定し、特定のドメインからのアクセスのみを許可することを強く推奨します。
 
 ## 📄 ライセンス
