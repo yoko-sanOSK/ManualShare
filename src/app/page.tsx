@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, Suspense } from "react";
@@ -7,30 +6,64 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Footer } from "@/components/layout/footer";
 import { ManualCard } from "@/components/manual/manual-card";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, BookOpen, Loader2 } from "lucide-react";
+import { Search, Filter, BookOpen, Loader2, Lock } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, collectionGroup } from "firebase/firestore";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { verifyAdminPassword } from "@/app/actions/admin-auth";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 function HomeContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category");
+  const { toast } = useToast();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
+  
+  // 認証ステート
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const firestore = useFirestore();
   
-  const categoriesRef = useMemoFirebase(() => collection(firestore, "categories"), [firestore]);
+  const categoriesRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "categories");
+  }, [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
-  const manualsRef = useMemoFirebase(() => collectionGroup(firestore, "manuals"), [firestore]);
+  const manualsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collectionGroup(firestore, "manuals");
+  }, [firestore]);
   const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
 
   useEffect(() => {
     setActiveCategory(searchParams.get("category"));
   }, [searchParams]);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifying(true);
+    const success = await verifyAdminPassword(passwordInput);
+    if (success) {
+      setIsAuthenticated(true);
+    } else {
+      toast({ 
+        title: "認証失敗", 
+        description: "パスワードが正しくありません。", 
+        variant: "destructive" 
+      });
+    }
+    setIsVerifying(false);
+  };
 
   const filteredManuals = useMemo(() => {
     if (!manuals) return [];
@@ -41,6 +74,44 @@ function HomeContent() {
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, activeCategory, manuals]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-6">
+        <BrandLogo size="lg" className="mb-10" hoverable={false} />
+        <Card className="max-w-md w-full shadow-lg border-primary/20">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <Lock className="text-primary w-8 h-8" />
+            </div>
+            <CardTitle className="text-2xl font-headline font-bold">アクセス認証</CardTitle>
+            <CardDescription>ManualShare を閲覧するにはパスワードを入力してください。</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleAuth}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">パスワード</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={passwordInput} 
+                  onChange={(e) => setPasswordInput(e.target.value)} 
+                  placeholder="アクセスパスワード" 
+                  required 
+                  autoFocus 
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full font-bold" disabled={isVerifying}>
+                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "ログイン"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>
