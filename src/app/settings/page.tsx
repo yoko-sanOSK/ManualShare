@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -23,11 +22,22 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { verifyAdminPassword } from "@/app/actions/admin-auth";
-import { uploadFileAction } from "@/app/actions/upload-action";
+import { uploadFileAction, deleteFileAction } from "@/app/actions/upload-action";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type ManualStatus = 'published' | 'draft';
+
+interface ManualData {
+  id: string;
+  title: string;
+  content: string;
+  categoryId: string;
+  description: string;
+  imageUrl?: string;
+  status: ManualStatus;
+  categoryName: string;
+}
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -57,21 +67,13 @@ export default function SettingsPage() {
     if (!firestore) return null;
     return collectionGroup(firestore, "manuals");
   }, [firestore]);
-  const { data: manuals } = useCollection(manualsRef);
+  const { data: manuals } = useCollection<ManualData>(manualsRef);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id?: string, name: string, description: string } | null>(null);
 
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
-  const [editingManual, setEditingManual] = useState<{
-    id?: string;
-    title: string;
-    content: string;
-    categoryId: string;
-    description: string;
-    imageUrl?: string;
-    status: ManualStatus;
-  } | null>(null);
+  const [editingManual, setEditingManual] = useState<Partial<ManualData> | null>(null);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +146,62 @@ export default function SettingsPage() {
       title: editingManual.status === 'published' ? "公開しました" : "下書き保存しました", 
       description: `「${editingManual.title}」を保存しました。` 
     });
+  };
+
+  /**
+   * HTML内からすべての <img> タグの src を抽出するヘルパー。
+   */
+  const extractImagesFromHtml = (html: string): string[] => {
+    if (!html) return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const images = Array.from(doc.querySelectorAll('img')).map(img => img.getAttribute('src')).filter(src => !!src) as string[];
+    return images;
+  };
+
+  /**
+   * 記事を削除し、それに関連する画像もクリーンアップする。
+   */
+  const handleDeleteManual = async (manual: ManualData) => {
+    if (!firestore || !manuals) return;
+
+    if (!confirm(`「${manual.title}」を削除しますか？\nこの記事で使用されている画像もストレージから削除されます（他の記事で使用されていない場合）。`)) {
+      return;
+    }
+
+    try {
+      // 1. 削除対象の記事に含まれるすべての画像URLを抽出
+      const targetImages = new Set<string>();
+      if (manual.imageUrl) targetImages.add(manual.imageUrl);
+      extractImagesFromHtml(manual.content).forEach(src => targetImages.add(src));
+
+      // 2. 他の記事ですべての画像URL（サムネイルと本文中）を収集
+      const otherImages = new Set<string>();
+      manuals.forEach(m => {
+        if (m.id !== manual.id) {
+          if (m.imageUrl) otherImages.add(m.imageUrl);
+          extractImagesFromHtml(m.content).forEach(src => otherImages.add(src));
+        }
+      });
+
+      // 3. 他の記事で使われていない画像を特定し、ストレージから削除
+      for (const url of targetImages) {
+        if (!otherImages.has(url)) {
+          // Vercel Blob の URL の場合のみ削除を実行
+          if (url.includes('public.blob.vercel-storage.com')) {
+            await deleteFileAction(url);
+          }
+        }
+      }
+
+      // 4. Firestore から記事ドキュメントを削除
+      deleteDocumentNonBlocking(doc(firestore, "categories", manual.categoryId, "manuals", manual.id));
+      
+      toast({ title: "削除完了", description: "記事と関連する画像を削除しました。" });
+    } catch (error: any) {
+      console.error("Delete error:", error);
+      toast({ title: "エラー", description: "削除中に問題が発生しました。", variant: "destructive" });
+    }
   };
 
   if (!mounted) return null;
@@ -268,10 +326,10 @@ export default function SettingsPage() {
                           </div>
                         </div>
                         <div className="flex gap-2 justify-end mt-4 sm:mt-0">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditingManual(manual as any); setIsManualDialogOpen(true); }}>
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingManual(manual); setIsManualDialogOpen(true); }}>
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => firestore && deleteDocumentNonBlocking(doc(firestore, `categories/${manual.categoryId}/manuals/${manual.id}`))}>
+                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteManual(manual)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
