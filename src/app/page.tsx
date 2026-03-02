@@ -170,7 +170,7 @@ function HomeContent() {
           </header>
 
           <main className="flex-1 p-6 md:p-8 lg:p-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
               <div>
                 <h1 className="text-3xl font-headline font-bold text-foreground mb-2">
                   ナレッジハブ
@@ -181,28 +181,30 @@ function HomeContent() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 mr-2 text-sm font-medium text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
                   <Filter className="w-4 h-4" />
                   フィルター:
                 </div>
-                <Badge 
-                  variant={activeCategory === null ? "default" : "outline"}
-                  className={`cursor-pointer h-7 px-3 ${activeCategory === null ? "bg-primary" : "hover:border-primary/50"}`}
-                  onClick={() => setActiveCategory(null)}
-                >
-                  すべて
-                </Badge>
-                {categories?.map((cat) => (
-                  <Badge
-                    key={cat.id}
-                    variant={activeCategory === cat.name ? "default" : "outline"}
-                    className={`cursor-pointer h-7 px-3 ${activeCategory === cat.name ? "bg-primary" : "hover:border-primary/50"}`}
-                    onClick={() => setActiveCategory(cat.name)}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge 
+                    variant={activeCategory === null ? "default" : "outline"}
+                    className={`cursor-pointer h-7 px-3 ${activeCategory === null ? "bg-primary" : "hover:border-primary/50"}`}
+                    onClick={() => setActiveCategory(null)}
                   >
-                    {cat.name}
+                    すべて
                   </Badge>
-                ))}
+                  {categories?.map((cat) => (
+                    <Badge
+                      key={cat.id}
+                      variant={activeCategory === cat.name ? "default" : "outline"}
+                      className={`cursor-pointer h-7 px-3 ${activeCategory === cat.name ? "bg-primary" : "hover:border-primary/50"}`}
+                      onClick={() => setActiveCategory(cat.name)}
+                    >
+                      {cat.name}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
 
