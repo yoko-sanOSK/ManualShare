@@ -4,7 +4,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'ManualShare | マニュアル共有プラットフォーム',
+  title: 'ManualShare',
   description: '企業のナレッジ共有を効率化するインテリジェントなビジネスマニュアルプラットフォーム',
 };
 
