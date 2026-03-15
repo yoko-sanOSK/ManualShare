@@ -50,24 +50,26 @@ function HomeContent() {
   }, [firestore]);
   const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
 
-  // セッションのチェック
-  useEffect(() => {
-    const checkAuth = () => {
-      const storedSession = localStorage.getItem(ACCESS_SESSION_KEY);
-      if (storedSession) {
-        const { timestamp } = JSON.parse(storedSession);
-        const now = Date.now();
-        if (now - timestamp < SESSION_DURATION_MS) {
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem(ACCESS_SESSION_KEY);
-          setIsAuthenticated(false);
-        }
+  // セッションのチェックと更新
+  const checkAuth = () => {
+    const storedSession = localStorage.getItem(ACCESS_SESSION_KEY);
+    if (storedSession) {
+      const { timestamp } = JSON.parse(storedSession);
+      const now = Date.now();
+      if (now - timestamp < SESSION_DURATION_MS) {
+        // セッションが有効な場合は、有効期限を少し延長（スライディングウィンドウ）
+        localStorage.setItem(ACCESS_SESSION_KEY, JSON.stringify({ timestamp: now }));
+        setIsAuthenticated(true);
       } else {
+        localStorage.removeItem(ACCESS_SESSION_KEY);
         setIsAuthenticated(false);
       }
-    };
+    } else {
+      setIsAuthenticated(false);
+    }
+  };
 
+  useEffect(() => {
     checkAuth();
     // 定期的にセッション切れをチェック
     const interval = setInterval(checkAuth, 30000);
