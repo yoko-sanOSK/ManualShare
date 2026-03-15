@@ -181,7 +181,7 @@ function HomeContent() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
                   <Filter className="w-4 h-4" />
                   フィルター:

@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'ManualShare',
-  description: '企業のナレッジ共有を効率化するインテリジェントなビジネスマニュアルプラットフォーム',
+  description: '企業のナレッジ共有を効率化するビジネスマニュアルプラットフォーム',
 };
 
 export default function RootLayout({
