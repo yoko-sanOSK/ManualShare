@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/footer";
 import { ManualCard } from "@/components/manual/manual-card";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, BookOpen, Loader2, Lock } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, collectionGroup } from "firebase/firestore";
@@ -24,6 +24,7 @@ const SESSION_DURATION_MS = 5 * 60 * 1000; // 5分
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialCategory = searchParams.get("category");
   const { toast } = useToast();
   
@@ -51,19 +52,26 @@ function HomeContent() {
 
   // セッションのチェック
   useEffect(() => {
-    const storedSession = localStorage.getItem(ACCESS_SESSION_KEY);
-    if (storedSession) {
-      const { timestamp } = JSON.parse(storedSession);
-      const now = Date.now();
-      if (now - timestamp < SESSION_DURATION_MS) {
-        setIsAuthenticated(true);
+    const checkAuth = () => {
+      const storedSession = localStorage.getItem(ACCESS_SESSION_KEY);
+      if (storedSession) {
+        const { timestamp } = JSON.parse(storedSession);
+        const now = Date.now();
+        if (now - timestamp < SESSION_DURATION_MS) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem(ACCESS_SESSION_KEY);
+          setIsAuthenticated(false);
+        }
       } else {
-        localStorage.removeItem(ACCESS_SESSION_KEY);
         setIsAuthenticated(false);
       }
-    } else {
-      setIsAuthenticated(false);
-    }
+    };
+
+    checkAuth();
+    // 定期的にセッション切れをチェック
+    const interval = setInterval(checkAuth, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -75,9 +83,9 @@ function HomeContent() {
     setIsVerifying(true);
     const success = await verifyAccessPassword(passwordInput);
     if (success) {
-      // 成功時にタイムスタンプを保存
       localStorage.setItem(ACCESS_SESSION_KEY, JSON.stringify({ timestamp: Date.now() }));
       setIsAuthenticated(true);
+      toast({ title: "ログイン成功", description: "ダッシュボードへようこそ。" });
     } else {
       toast({ 
         title: "認証失敗", 
@@ -91,7 +99,6 @@ function HomeContent() {
   const filteredManuals = useMemo(() => {
     if (!manuals) return [];
     return manuals.filter((manual) => {
-      // 公開ステータスのものだけ表示（statusが存在しない古いデータは表示対象とする）
       const isPublished = !manual.status || manual.status === 'published';
       if (!isPublished) return false;
 
@@ -102,7 +109,6 @@ function HomeContent() {
     });
   }, [searchQuery, activeCategory, manuals]);
 
-  // 初期ロード中
   if (isAuthenticated === null) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -181,15 +187,15 @@ function HomeContent() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
-                  <Filter className="w-4 h-4" />
-                  フィルター:
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-card p-3 rounded-xl border border-border/50 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground shrink-0 border-r pr-3 border-border/50">
+                  <Filter className="w-4 h-4 text-primary" />
+                  カテゴリー
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 pl-1">
                   <Badge 
                     variant={activeCategory === null ? "default" : "outline"}
-                    className={`cursor-pointer h-7 px-3 ${activeCategory === null ? "bg-primary" : "hover:border-primary/50"}`}
+                    className={`cursor-pointer h-7 px-3 transition-all ${activeCategory === null ? "bg-primary shadow-sm" : "hover:border-primary/50"}`}
                     onClick={() => setActiveCategory(null)}
                   >
                     すべて
@@ -198,7 +204,7 @@ function HomeContent() {
                     <Badge
                       key={cat.id}
                       variant={activeCategory === cat.name ? "default" : "outline"}
-                      className={`cursor-pointer h-7 px-3 ${activeCategory === cat.name ? "bg-primary" : "hover:border-primary/50"}`}
+                      className={`cursor-pointer h-7 px-3 transition-all ${activeCategory === cat.name ? "bg-primary shadow-sm" : "hover:border-primary/50"}`}
                       onClick={() => setActiveCategory(cat.name)}
                     >
                       {cat.name}

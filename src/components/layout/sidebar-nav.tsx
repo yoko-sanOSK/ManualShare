@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -12,16 +13,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Settings, HelpCircle, Tag, Layers } from "lucide-react";
+import { LayoutDashboard, Settings, HelpCircle, Tag, Layers, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { BrandLogo } from "./brand-logo";
+import { useToast } from "@/hooks/use-toast";
+
+const ACCESS_SESSION_KEY = "manualshare_access_session_v1";
 
 /**
  * メインメニュー項目（Dashboard）
- * useSearchParams を使用するため、呼び出し元で Suspense で囲む必要があります。
  */
 function MainMenu() {
   const pathname = usePathname();
@@ -44,7 +48,6 @@ function MainMenu() {
 
 /**
  * カテゴリー一覧項目
- * useSearchParams を使用するため、呼び出し元で Suspense で囲む必要があります。
  */
 function CategoryList() {
   const pathname = usePathname();
@@ -79,9 +82,6 @@ function CategoryList() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
-      {(!categories || categories.length === 0) && (
-        <p className="px-4 text-xs text-muted-foreground italic mt-2">カテゴリーなし</p>
-      )}
     </SidebarMenu>
   );
 }
@@ -91,6 +91,14 @@ function CategoryList() {
  */
 export function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    localStorage.removeItem(ACCESS_SESSION_KEY);
+    toast({ title: "ログアウトしました", description: "セッションを終了しました。" });
+    window.location.reload(); // 状態リセットのためにリロード
+  };
 
   return (
     <Sidebar variant="sidebar" className="border-r border-border/50">
@@ -148,6 +156,16 @@ export function SidebarNav() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-4 border-t border-border/50">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors h-9 font-medium" 
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          <span>ログアウト</span>
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }
