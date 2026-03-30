@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: 'ManualShare',
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen">
         <FirebaseClientProvider>
           {children}
+          <Analytics />
           <Toaster />
         </FirebaseClientProvider>
       </body>
