@@ -3,6 +3,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: 'ManualShare',
@@ -25,6 +26,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           {children}
           <Analytics />
+          <SpeedInsights />
           <Toaster />
         </FirebaseClientProvider>
       </body>
