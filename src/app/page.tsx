@@ -44,6 +44,11 @@ function HomeContent() {
   }, [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [categories]);
+
   const manualsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return collectionGroup(firestore, "manuals");
@@ -202,7 +207,7 @@ function HomeContent() {
                   >
                     すべて
                   </Badge>
-                  {categories?.map((cat) => (
+                  {sortedCategories?.map((cat) => (
                     <Badge
                       key={cat.id}
                       variant={activeCategory === cat.name ? "default" : "outline"}

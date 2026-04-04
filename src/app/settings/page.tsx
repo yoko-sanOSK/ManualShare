@@ -41,6 +41,13 @@ interface ManualData {
   lastUpdated?: string;
 }
 
+interface CategoryData {
+  id: string;
+  name: string;
+  description: string;
+  order?: number;
+}
+
 export default function SettingsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -64,7 +71,12 @@ export default function SettingsPage() {
     if (!firestore) return null;
     return collection(firestore, "categories");
   }, [firestore]);
-  const { data: categories } = useCollection(categoriesRef);
+  const { data: categories } = useCollection<CategoryData>(categoriesRef);
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [categories]);
 
   const manualsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -73,7 +85,7 @@ export default function SettingsPage() {
   const { data: manuals } = useCollection<ManualData>(manualsRef);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ id?: string, name: string, description: string } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Partial<CategoryData> | null>(null);
 
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [editingManual, setEditingManual] = useState<Partial<ManualData> | null>(null);
@@ -132,7 +144,12 @@ export default function SettingsPage() {
   const handleSaveCategory = () => {
     if (!editingCategory?.name || !firestore || !categoriesRef) return;
     const id = editingCategory.id || doc(categoriesRef).id;
-    setDocumentNonBlocking(doc(firestore, "categories", id), { id, ...editingCategory }, { merge: true });
+    const data = {
+      ...editingCategory,
+      id,
+      order: Number(editingCategory.order) || 0,
+    };
+    setDocumentNonBlocking(doc(firestore, "categories", id), data, { merge: true });
     setIsCategoryDialogOpen(false);
     toast({ title: "保存完了", description: `カテゴリー「${editingCategory.name}」を保存しました。` });
   };
@@ -309,7 +326,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <Button onClick={() => {
-                    setEditingManual({ title: "", content: "", categoryId: categories?.[0]?.id || "", description: "", imageUrl: "", status: "published" });
+                    setEditingManual({ title: "", content: "", categoryId: sortedCategories?.[0]?.id || "", description: "", imageUrl: "", status: "published" });
                     setIsManualDialogOpen(true);
                   }} disabled={!categories?.length} className="font-bold w-full sm:w-auto">
                     <Plus className="w-5 h-5 mr-2" /> 新規作成
@@ -362,16 +379,19 @@ export default function SettingsPage() {
               <TabsContent value="categories" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold">カテゴリー管理</h3>
-                  <Button variant="outline" onClick={() => { setEditingCategory({ name: "", description: "" }); setIsCategoryDialogOpen(true); }} className="font-bold">
+                  <Button variant="outline" onClick={() => { setEditingCategory({ name: "", description: "", order: categories?.length || 0 }); setIsCategoryDialogOpen(true); }} className="font-bold">
                     <Plus className="w-4 h-4 mr-2" /> 追加
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categories?.map((cat) => (
+                  {sortedCategories?.map((cat) => (
                     <Card key={cat.id}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg flex justify-between">
-                          {cat.name}
+                          <span className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px]">{cat.order || 0}</Badge>
+                            {cat.name}
+                          </span>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingCategory(cat); setIsCategoryDialogOpen(true); }}>
                               <Edit className="w-4 h-4" />
@@ -401,12 +421,20 @@ export default function SettingsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>カテゴリー編集</DialogTitle>
-            <DialogDescription>カテゴリーの名称と説明を入力してください。</DialogDescription>
+            <DialogDescription>カテゴリーの情報を入力してください。表示順は数字が小さいほど先に表示されます。</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>カテゴリー名</Label>
               <Input value={editingCategory?.name || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>表示順 (0, 1, 2...)</Label>
+              <Input 
+                type="number" 
+                value={editingCategory?.order ?? ""} 
+                onChange={(e) => setEditingCategory(prev => ({ ...prev!, order: parseInt(e.target.value) || 0 }))} 
+              />
             </div>
             <div className="space-y-2">
               <Label>説明</Label>
@@ -464,7 +492,7 @@ export default function SettingsPage() {
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">カテゴリー</Label>
                     <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{sortedCategories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
 

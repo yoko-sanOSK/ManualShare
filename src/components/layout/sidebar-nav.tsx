@@ -17,7 +17,7 @@ import {
 import { LayoutDashboard, Settings, HelpCircle, Tag, Layers } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import { BrandLogo } from "./brand-logo";
 
 /**
@@ -57,6 +57,11 @@ function CategoryList() {
   }, [firestore]);
   const { data: categories } = useCollection(categoriesRef);
 
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [categories]);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -68,7 +73,7 @@ function CategoryList() {
         </SidebarMenuButton>
       </SidebarMenuItem>
       
-      {categories?.map((category) => (
+      {sortedCategories?.map((category) => (
         <SidebarMenuItem key={category.id}>
           <SidebarMenuButton asChild isActive={pathname === "/" && currentCategory === category.name}>
             <Link href={`/?category=${category.name}`}>
