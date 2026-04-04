@@ -147,7 +147,7 @@ export default function SettingsPage() {
     const data = {
       ...editingCategory,
       id,
-      order: Number(editingCategory.order) || 0,
+      order: editingCategory.order ?? 0,
     };
     setDocumentNonBlocking(doc(firestore, "categories", id), data, { merge: true });
     setIsCategoryDialogOpen(false);
@@ -429,12 +429,20 @@ export default function SettingsPage() {
               <Input value={editingCategory?.name || ""} onChange={(e) => setEditingCategory(prev => ({ ...prev!, name: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>表示順 (0, 1, 2...)</Label>
-              <Input 
-                type="number" 
-                value={editingCategory?.order ?? ""} 
-                onChange={(e) => setEditingCategory(prev => ({ ...prev!, order: parseInt(e.target.value) || 0 }))} 
-              />
+              <Label>表示順</Label>
+              <Select 
+                value={editingCategory?.order?.toString() || "0"} 
+                onValueChange={(val) => setEditingCategory(prev => ({ ...prev!, order: parseInt(val) }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="表示順を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 21 }, (_, i) => (
+                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>説明</Label>
