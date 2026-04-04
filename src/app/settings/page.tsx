@@ -147,7 +147,7 @@ export default function SettingsPage() {
     const data = {
       ...editingCategory,
       id,
-      order: editingCategory.order ?? 0,
+      order: editingCategory.order ?? 1,
     };
     setDocumentNonBlocking(doc(firestore, "categories", id), data, { merge: true });
     setIsCategoryDialogOpen(false);
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between bg-card p-6 rounded-xl border shadow-sm gap-4">
                   <div className="flex items-center gap-4 flex-1 w-full">
                     <div className="bg-primary/10 p-3 rounded-xl text-primary shrink-0"><Layout className="w-6 h-6" /></div>
-                    <div className="relative flex-1 max-w-sm">
+                    <div className="relative flex-1 max-sm:w-full">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         placeholder="記事を検索..." 
@@ -379,7 +379,7 @@ export default function SettingsPage() {
               <TabsContent value="categories" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold">カテゴリー管理</h3>
-                  <Button variant="outline" onClick={() => { setEditingCategory({ name: "", description: "", order: categories?.length || 0 }); setIsCategoryDialogOpen(true); }} className="font-bold">
+                  <Button variant="outline" onClick={() => { setEditingCategory({ name: "", description: "", order: (categories?.length || 0) + 1 }); setIsCategoryDialogOpen(true); }} className="font-bold">
                     <Plus className="w-4 h-4 mr-2" /> 追加
                   </Button>
                 </div>
@@ -389,7 +389,7 @@ export default function SettingsPage() {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg flex justify-between">
                           <span className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{cat.order || 0}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{cat.order || 1}</Badge>
                             {cat.name}
                           </span>
                           <div className="flex gap-1">
@@ -431,15 +431,15 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>表示順</Label>
               <Select 
-                value={editingCategory?.order?.toString() || "0"} 
+                value={editingCategory?.order?.toString() || "1"} 
                 onValueChange={(val) => setEditingCategory(prev => ({ ...prev!, order: parseInt(val) }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="表示順を選択" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[180px]">
-                  {Array.from({ length: 21 }, (_, i) => (
-                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                  {Array.from({ length: 20 }, (_, i) => (
+                    <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
