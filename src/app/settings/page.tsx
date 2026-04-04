@@ -437,7 +437,7 @@ export default function SettingsPage() {
                 <SelectTrigger>
                   <SelectValue placeholder="表示順を選択" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[180px]">
                   {Array.from({ length: 21 }, (_, i) => (
                     <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
                   ))}
