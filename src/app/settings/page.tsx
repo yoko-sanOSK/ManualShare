@@ -300,6 +300,14 @@ export default function SettingsPage() {
     const category = categories?.find(c => c.id === editingManual.categoryId);
     
     const manualId = editingManual.id || doc(collection(firestore, `categories/${editingManual.categoryId}/manuals`)).id;
+    
+    // カテゴリーが変更された場合、古い記事を削除する
+    const existingManual = manuals?.find(m => m.id === manualId);
+    if (existingManual && existingManual.categoryId !== editingManual.categoryId) {
+      const oldDocRef = doc(firestore, "categories", existingManual.categoryId, "manuals", manualId);
+      deleteDocumentNonBlocking(oldDocRef);
+    }
+
     const manualDocRef = doc(firestore, "categories", editingManual.categoryId, "manuals", manualId);
     
     const data = {
