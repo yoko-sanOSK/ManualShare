@@ -105,7 +105,7 @@ function HomeContent() {
 
   const filteredManuals = useMemo(() => {
     if (!manuals) return [];
-    return manuals.filter((manual) => {
+    const filtered = manuals.filter((manual) => {
       const isPublished = !manual.status || manual.status === 'published';
       if (!isPublished) return false;
 
@@ -114,6 +114,9 @@ function HomeContent() {
       const matchesCategory = activeCategory ? manual.categoryName === activeCategory : true;
       return matchesSearch && matchesCategory;
     });
+    
+    // order フィールドでソートし、なければ 0 とする
+    return [...filtered].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [searchQuery, activeCategory, manuals]);
 
   if (isAuthenticated === null) {

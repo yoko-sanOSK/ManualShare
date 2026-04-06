@@ -42,6 +42,7 @@
         },
         "categoryName": { "type": "string" },
         "lastUpdated": { "type": "string" },
+        "order": { "type": "number", "description": "Display order index." },
         "createdAt": {
           "type": "string",
           "format": "date-time"

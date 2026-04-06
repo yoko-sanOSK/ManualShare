@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff, EyeOff, Eye, Search } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff, EyeOff, Eye, Search, GripVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,26 @@ import { verifyAdminPassword } from "@/app/actions/admin-auth";
 import { uploadFileAction, deleteFileAction } from "@/app/actions/upload-action";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
+// DND Kit imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 type ManualStatus = 'published' | 'draft';
 
@@ -39,6 +59,7 @@ interface ManualData {
   status: ManualStatus;
   categoryName: string;
   lastUpdated?: string;
+  order?: number;
 }
 
 interface CategoryData {
@@ -46,6 +67,86 @@ interface CategoryData {
   name: string;
   description: string;
   order?: number;
+}
+
+function SortableManualItem({ 
+  manual, 
+  onEdit, 
+  onDelete, 
+  isDragDisabled,
+  defaultLogoUrl 
+}: { 
+  manual: ManualData, 
+  onEdit: (m: ManualData) => void, 
+  onDelete: (m: ManualData) => void,
+  isDragDisabled: boolean,
+  defaultLogoUrl: string
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: manual.id, disabled: isDragDisabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn(isDragDisabled ? "" : "touch-none")}>
+      <Card className={cn(
+        "group hover:border-primary/50 transition-all shadow-sm",
+        isDragging && "border-primary ring-2 ring-primary/20 bg-muted/50"
+      )}>
+        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center">
+          <div className="flex items-center flex-1 min-w-0">
+            {!isDragDisabled && (
+              <div 
+                {...attributes} 
+                {...listeners} 
+                className="mr-4 cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded text-muted-foreground group-hover:text-primary transition-colors"
+              >
+                <GripVertical className="w-5 h-5" />
+              </div>
+            )}
+            
+            <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4 border">
+              <Image src={manual.imageUrl || defaultLogoUrl} alt="" fill className="object-cover" unoptimized />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h4 className="font-bold truncate text-base sm:text-lg">{manual.title}</h4>
+                <Badge className="bg-primary text-white font-medium">{manual.categoryName}</Badge>
+                {manual.status === 'draft' && (
+                  <Badge variant="outline" className="text-muted-foreground gap-1">
+                    <EyeOff className="w-3 h-3" /> 下書き
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <p className="line-clamp-1 flex-1">{manual.description}</p>
+                <span className="shrink-0">最終更新: {manual.lastUpdated}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end mt-4 sm:mt-0 ml-4">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(manual)}>
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(manual)}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 export default function SettingsPage() {
@@ -84,20 +185,56 @@ export default function SettingsPage() {
   }, [firestore]);
   const { data: manuals } = useCollection<ManualData>(manualsRef);
 
+  const sortedManuals = useMemo(() => {
+    if (!manuals) return [];
+    return [...manuals].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [manuals]);
+
+  const filteredManuals = useMemo(() => {
+    if (!manualSearchQuery) return sortedManuals;
+    return sortedManuals.filter(m => 
+      m.title?.toLowerCase().includes(manualSearchQuery.toLowerCase()) ||
+      m.categoryName?.toLowerCase().includes(manualSearchQuery.toLowerCase())
+    );
+  }, [sortedManuals, manualSearchQuery]);
+
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Partial<CategoryData> | null>(null);
 
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [editingManual, setEditingManual] = useState<Partial<ManualData> | null>(null);
 
-  const filteredManuals = useMemo(() => {
-    if (!manuals) return [];
-    if (!manualSearchQuery) return manuals;
-    return manuals.filter(m => 
-      m.title?.toLowerCase().includes(manualSearchQuery.toLowerCase()) ||
-      m.categoryName?.toLowerCase().includes(manualSearchQuery.toLowerCase())
-    );
-  }, [manuals, manualSearchQuery]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !firestore) return;
+
+    const oldIndex = sortedManuals.findIndex((m) => m.id === active.id);
+    const newIndex = sortedManuals.findIndex((m) => m.id === over.id);
+
+    const newSortedManuals = arrayMove(sortedManuals, oldIndex, newIndex);
+    
+    // Update Firestore for all items to sync the new order
+    newSortedManuals.forEach((m, index) => {
+      const newOrder = index + 1;
+      if (m.order !== newOrder) {
+        const manualDocRef = doc(firestore, "categories", m.categoryId, "manuals", m.id);
+        setDocumentNonBlocking(manualDocRef, { order: newOrder }, { merge: true });
+      }
+    });
+    
+    toast({ title: "順序を更新しました", description: "表示順を保存しました。" });
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,6 +308,7 @@ export default function SettingsPage() {
       categoryName: category?.name || "未分類",
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString().split('T')[0],
+      order: editingManual.order || (manuals?.length || 0) + 1,
     };
 
     setDocumentNonBlocking(manualDocRef, data, { merge: true });
@@ -333,41 +471,36 @@ export default function SettingsPage() {
                   </Button>
                 </div>
 
+                {!manualSearchQuery && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 ml-2">
+                    <GripVertical className="w-3.5 h-3.5" />
+                    ドラッグして表示順を変更できます
+                  </p>
+                )}
+
                 <div className="grid grid-cols-1 gap-4">
-                  {filteredManuals.map((manual) => (
-                    <Card key={manual.id} className="group hover:border-primary/50 transition-all shadow-sm">
-                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center">
-                        <div className="flex items-center flex-1 min-w-0">
-                          <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden relative mr-4 border">
-                            <Image src={manual.imageUrl || defaultLogoUrl} alt="" fill className="object-cover" unoptimized />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <h4 className="font-bold truncate text-base sm:text-lg">{manual.title}</h4>
-                              <Badge className="bg-primary text-white font-medium">{manual.categoryName}</Badge>
-                              {manual.status === 'draft' && (
-                                <Badge variant="outline" className="text-muted-foreground gap-1">
-                                  <EyeOff className="w-3 h-3" /> 下書き
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <p className="line-clamp-1 flex-1">{manual.description}</p>
-                              <span className="shrink-0">最終更新: {manual.lastUpdated}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 justify-end mt-4 sm:mt-0 ml-4">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditingManual(manual); setIsManualDialogOpen(true); }}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteManual(manual)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={filteredManuals.map(m => m.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {filteredManuals.map((manual) => (
+                        <SortableManualItem 
+                          key={manual.id} 
+                          manual={manual} 
+                          isDragDisabled={!!manualSearchQuery}
+                          defaultLogoUrl={defaultLogoUrl}
+                          onEdit={(m) => { setEditingManual(m); setIsManualDialogOpen(true); }}
+                          onDelete={(m) => handleDeleteManual(m)}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                  
                   {filteredManuals.length === 0 && (
                     <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
                       <p className="text-muted-foreground">該当する記事が見つかりません。</p>
