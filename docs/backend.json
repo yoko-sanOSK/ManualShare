@@ -71,6 +71,21 @@
         "order": { "type": "number", "description": "Display order index." }
       },
       "required": ["id", "name"]
+    },
+    "Announcement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Announcement",
+      "type": "object",
+      "description": "Represents a system announcement.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "date"]
     }
   },
   "auth": {
@@ -85,6 +100,10 @@
       {
         "path": "/categories/{categoryId}/manuals/{manualId}",
         "definition": { "entityName": "Manual", "schema": { "$ref": "#/backend/entities/Manual" }, "description": "マニュアル情報" }
+      },
+      {
+        "path": "/announcements/{announcementId}",
+        "definition": { "entityName": "Announcement", "schema": { "$ref": "#/backend/entities/Announcement" }, "description": "お知らせ情報" }
       }
     ]
   }

@@ -7,11 +7,11 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Footer } from "@/components/layout/footer";
 import { ManualCard } from "@/components/manual/manual-card";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, BookOpen, Loader2, Lock } from "lucide-react";
+import { Search, Filter, BookOpen, Loader2, Lock, Megaphone, Calendar } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, collectionGroup } from "firebase/firestore";
+import { collection, collectionGroup, query, orderBy, limit } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import { verifyAccessPassword } from "@/app/actions/admin-auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
 
 const ACCESS_SESSION_KEY = "manualshare_access_session_v1";
-const SESSION_DURATION_MS = 5 * 60 * 1000; // 5分
+const SESSION_DURATION_MS = 30 * 60 * 1000; // 30分に延長
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -32,7 +32,7 @@ function HomeContent() {
   const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
   
   // 認証ステート
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null は初期チェック中
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -55,14 +55,25 @@ function HomeContent() {
   }, [firestore]);
   const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
 
-  // セッションのチェックと更新
+  // お知らせの取得
+  const announcementsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "announcements"), orderBy("date", "desc"), limit(3));
+  }, [firestore]);
+  const { data: announcements } = useCollection(announcementsRef);
+
+  const activeAnnouncements = useMemo(() => {
+    if (!announcements) return [];
+    return announcements.filter(a => a.isActive !== false);
+  }, [announcements]);
+
+  // セッションのチェック
   const checkAuth = () => {
     const storedSession = localStorage.getItem(ACCESS_SESSION_KEY);
     if (storedSession) {
       const { timestamp } = JSON.parse(storedSession);
       const now = Date.now();
       if (now - timestamp < SESSION_DURATION_MS) {
-        // セッションが有効な場合は、有効期限を少し延長（スライディングウィンドウ）
         localStorage.setItem(ACCESS_SESSION_KEY, JSON.stringify({ timestamp: now }));
         setIsAuthenticated(true);
       } else {
@@ -76,7 +87,6 @@ function HomeContent() {
 
   useEffect(() => {
     checkAuth();
-    // 定期的にセッション切れをチェック
     const interval = setInterval(checkAuth, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -115,7 +125,6 @@ function HomeContent() {
       return matchesSearch && matchesCategory;
     });
     
-    // order フィールドでソートし、なければ 0 とする
     return [...filtered].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [searchQuery, activeCategory, manuals]);
 
@@ -186,6 +195,31 @@ function HomeContent() {
           </header>
 
           <main className="flex-1 p-6 md:p-8 lg:p-10">
+            {/* お知らせセクション */}
+            {activeAnnouncements.length > 0 && (
+              <div className="mb-10 space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Megaphone className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-headline font-bold">お知らせ</h2>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {activeAnnouncements.map((ann) => (
+                    <Card key={ann.id} className="border-none shadow-sm bg-primary/5 hover:bg-primary/10 transition-colors">
+                      <CardContent className="p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="bg-primary/10 px-2 py-1 rounded text-[10px] font-bold text-primary shrink-0 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {ann.date}
+                          </div>
+                          <p className="font-medium text-sm truncate">{ann.title}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
               <div>
                 <h1 className="text-3xl font-headline font-bold text-foreground mb-2">
@@ -198,7 +232,7 @@ function HomeContent() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-card p-3 rounded-xl border border-border/50 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground shrink-0 border-r pr-3 border-border/50">
+                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground shrink-0 pr-3 border-r border-border/50">
                   <Filter className="w-4 h-4 text-primary" />
                   カテゴリー
                 </div>

@@ -13,13 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff, EyeOff, Eye, Search, GripVertical } from "lucide-react";
+import { Plus, Trash2, Edit, FileText, Tag, Layout, Save, Loader2, Lock, X, MonitorOff, EyeOff, Eye, Search, GripVertical, Megaphone, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { verifyAdminPassword } from "@/app/actions/admin-auth";
@@ -67,6 +68,15 @@ interface CategoryData {
   name: string;
   description: string;
   order?: number;
+}
+
+interface AnnouncementData {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  isActive: boolean;
+  createdAt: any;
 }
 
 function SortableManualItem({ 
@@ -185,6 +195,12 @@ export default function SettingsPage() {
   }, [firestore]);
   const { data: manuals } = useCollection<ManualData>(manualsRef);
 
+  const announcementsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "announcements");
+  }, [firestore]);
+  const { data: announcements } = useCollection<AnnouncementData>(announcementsRef);
+
   const sortedManuals = useMemo(() => {
     if (!manuals) return [];
     return [...manuals].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -203,6 +219,9 @@ export default function SettingsPage() {
 
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [editingManual, setEditingManual] = useState<Partial<ManualData> | null>(null);
+
+  const [isAnnounceDialogOpen, setIsAnnounceDialogOpen] = useState(false);
+  const [editingAnnounce, setEditingAnnounce] = useState<Partial<AnnouncementData> | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -224,7 +243,6 @@ export default function SettingsPage() {
 
     const newSortedManuals = arrayMove(sortedManuals, oldIndex, newIndex);
     
-    // Update Firestore for all items to sync the new order
     newSortedManuals.forEach((m, index) => {
       const newOrder = index + 1;
       if (m.order !== newOrder) {
@@ -256,13 +274,8 @@ export default function SettingsPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
       const result = await uploadFileAction(formData, 'manuals/covers');
-      
-      if ('error' in result) {
-        throw new Error(result.error);
-      }
-
+      if ('error' in result) throw new Error(result.error);
       setEditingManual(prev => ({ ...prev!, imageUrl: result.url }));
       toast({ title: "完了", description: "サムネイルを更新しました。" });
     } catch (error: any) {
@@ -281,11 +294,7 @@ export default function SettingsPage() {
   const handleSaveCategory = () => {
     if (!editingCategory?.name || !firestore || !categoriesRef) return;
     const id = editingCategory.id || doc(categoriesRef).id;
-    const data = {
-      ...editingCategory,
-      id,
-      order: editingCategory.order ?? 1,
-    };
+    const data = { ...editingCategory, id, order: editingCategory.order ?? 1 };
     setDocumentNonBlocking(doc(firestore, "categories", id), data, { merge: true });
     setIsCategoryDialogOpen(false);
     toast({ title: "保存完了", description: `カテゴリー「${editingCategory.name}」を保存しました。` });
@@ -296,20 +305,13 @@ export default function SettingsPage() {
       toast({ title: "入力エラー", description: "タイトルとカテゴリーは必須です。", variant: "destructive" });
       return;
     }
-    
     const category = categories?.find(c => c.id === editingManual.categoryId);
-    
     const manualId = editingManual.id || doc(collection(firestore, `categories/${editingManual.categoryId}/manuals`)).id;
-    
-    // カテゴリーが変更された場合、古い記事を削除する
     const existingManual = manuals?.find(m => m.id === manualId);
     if (existingManual && existingManual.categoryId !== editingManual.categoryId) {
-      const oldDocRef = doc(firestore, "categories", existingManual.categoryId, "manuals", manualId);
-      deleteDocumentNonBlocking(oldDocRef);
+      deleteDocumentNonBlocking(doc(firestore, "categories", existingManual.categoryId, "manuals", manualId));
     }
-
     const manualDocRef = doc(firestore, "categories", editingManual.categoryId, "manuals", manualId);
-    
     const data = {
       ...editingManual,
       id: manualId,
@@ -318,35 +320,42 @@ export default function SettingsPage() {
       lastUpdated: new Date().toISOString().split('T')[0],
       order: editingManual.order || (manuals?.length || 0) + 1,
     };
-
     setDocumentNonBlocking(manualDocRef, data, { merge: true });
     setIsManualDialogOpen(false);
-    toast({ 
-      title: editingManual.status === 'published' ? "公開しました" : "下書き保存しました", 
-      description: `「${editingManual.title}」を保存しました。` 
-    });
+    toast({ title: editingManual.status === 'published' ? "公開しました" : "下書き保存しました", description: `「${editingManual.title}」を保存しました。` });
+  };
+
+  const handleSaveAnnounce = () => {
+    if (!editingAnnounce?.title || !editingAnnounce?.date || !firestore) {
+      toast({ title: "入力エラー", description: "タイトルと日付は必須です。", variant: "destructive" });
+      return;
+    }
+    const id = editingAnnounce.id || doc(collection(firestore, "announcements")).id;
+    const data = {
+      ...editingAnnounce,
+      id,
+      isActive: editingAnnounce.isActive ?? true,
+      createdAt: editingAnnounce.createdAt || serverTimestamp(),
+    };
+    setDocumentNonBlocking(doc(firestore, "announcements", id), data, { merge: true });
+    setIsAnnounceDialogOpen(false);
+    toast({ title: "保存完了", description: "お知らせを更新しました。" });
   };
 
   const extractImagesFromHtml = (html: string): string[] => {
     if (!html) return [];
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const images = Array.from(doc.querySelectorAll('img')).map(img => img.getAttribute('src')).filter(src => !!src) as string[];
-    return images;
+    return Array.from(doc.querySelectorAll('img')).map(img => img.getAttribute('src')).filter(src => !!src) as string[];
   };
 
   const handleDeleteManual = async (manual: ManualData) => {
     if (!firestore || !manuals) return;
-
-    if (!confirm(`「${manual.title}」を削除しますか？\nこの記事で使用されている画像もストレージから削除されます（他の記事で使用されていない場合）。`)) {
-      return;
-    }
-
+    if (!confirm(`「${manual.title}」を削除しますか？`)) return;
     try {
       const targetImages = new Set<string>();
       if (manual.imageUrl) targetImages.add(manual.imageUrl);
       extractImagesFromHtml(manual.content).forEach(src => targetImages.add(src));
-
       const otherImages = new Set<string>();
       manuals.forEach(m => {
         if (m.id !== manual.id) {
@@ -354,20 +363,14 @@ export default function SettingsPage() {
           extractImagesFromHtml(m.content).forEach(src => otherImages.add(src));
         }
       });
-
       for (const url of targetImages) {
-        if (!otherImages.has(url)) {
-          if (url.includes('public.blob.vercel-storage.com')) {
-            await deleteFileAction(url);
-          }
+        if (!otherImages.has(url) && url.includes('public.blob.vercel-storage.com')) {
+          await deleteFileAction(url);
         }
       }
-
       deleteDocumentNonBlocking(doc(firestore, "categories", manual.categoryId, "manuals", manual.id));
-      
-      toast({ title: "削除完了", description: "記事と関連する画像を削除しました。" });
+      toast({ title: "削除完了", description: "記事を削除しました。" });
     } catch (error: any) {
-      console.error("Delete error:", error);
       toast({ title: "エラー", description: "削除中に問題が発生しました。", variant: "destructive" });
     }
   };
@@ -384,19 +387,10 @@ export default function SettingsPage() {
               <MonitorOff className="text-primary w-8 h-8" />
             </div>
             <CardTitle className="text-2xl font-headline font-bold">PC版をご利用ください</CardTitle>
-            <CardDescription>
-              記事管理機能は、大きな画面での操作に最適化されています。
-            </CardDescription>
+            <CardDescription>記事管理機能はPCでの操作に最適化されています。</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              記事の作成、編集、削除を行うには、PCまたはタブレットからアクセスしてください。
-            </p>
-          </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full" onClick={() => window.location.href = "/"}>
-              ダッシュボードへ戻る
-            </Button>
+            <Button variant="outline" className="w-full" onClick={() => window.location.href = "/"}>ダッシュボードへ戻る</Button>
           </CardFooter>
         </Card>
       </div>
@@ -444,17 +438,11 @@ export default function SettingsPage() {
           </header>
 
           <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-6xl mx-auto w-full">
-            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <h2 className="text-3xl font-headline font-bold mb-2">管理ダッシュボード</h2>
-                <p className="text-muted-foreground">記事やカテゴリーの作成・管理を行います。</p>
-              </div>
-            </div>
-
             <Tabs defaultValue="manuals" className="space-y-6">
               <TabsList className="bg-muted/50 p-1">
                 <TabsTrigger value="manuals" className="flex items-center gap-2"><FileText className="w-4 h-4" /> マニュアル記事</TabsTrigger>
                 <TabsTrigger value="categories" className="flex items-center gap-2"><Tag className="w-4 h-4" /> カテゴリー</TabsTrigger>
+                <TabsTrigger value="announcements" className="flex items-center gap-2"><Megaphone className="w-4 h-4" /> お知らせ</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manuals" className="space-y-6">
@@ -463,12 +451,7 @@ export default function SettingsPage() {
                     <div className="bg-primary/10 p-3 rounded-xl text-primary shrink-0"><Layout className="w-6 h-6" /></div>
                     <div className="relative flex-1 max-sm:w-full">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        placeholder="記事を検索..." 
-                        className="pl-9 h-10" 
-                        value={manualSearchQuery}
-                        onChange={(e) => setManualSearchQuery(e.target.value)}
-                      />
+                      <Input placeholder="記事を検索..." className="pl-9 h-10" value={manualSearchQuery} onChange={(e) => setManualSearchQuery(e.target.value)} />
                     </div>
                   </div>
                   <Button onClick={() => {
@@ -479,41 +462,14 @@ export default function SettingsPage() {
                   </Button>
                 </div>
 
-                {!manualSearchQuery && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 ml-2">
-                    <GripVertical className="w-3.5 h-3.5" />
-                    ドラッグして表示順を変更できます
-                  </p>
-                )}
-
                 <div className="grid grid-cols-1 gap-4">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={filteredManuals.map(m => m.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={filteredManuals.map(m => m.id)} strategy={verticalListSortingStrategy}>
                       {filteredManuals.map((manual) => (
-                        <SortableManualItem 
-                          key={manual.id} 
-                          manual={manual} 
-                          isDragDisabled={!!manualSearchQuery}
-                          defaultLogoUrl={defaultLogoUrl}
-                          onEdit={(m) => { setEditingManual(m); setIsManualDialogOpen(true); }}
-                          onDelete={(m) => handleDeleteManual(m)}
-                        />
+                        <SortableManualItem key={manual.id} manual={manual} isDragDisabled={!!manualSearchQuery} defaultLogoUrl={defaultLogoUrl} onEdit={(m) => { setEditingManual(m); setIsManualDialogOpen(true); }} onDelete={(m) => handleDeleteManual(m)} />
                       ))}
                     </SortableContext>
                   </DndContext>
-                  
-                  {filteredManuals.length === 0 && (
-                    <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
-                      <p className="text-muted-foreground">該当する記事が見つかりません。</p>
-                    </div>
-                  )}
                 </div>
               </TabsContent>
 
@@ -534,20 +490,44 @@ export default function SettingsPage() {
                             {cat.name}
                           </span>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingCategory(cat); setIsCategoryDialogOpen(true); }}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingCategory(cat); setIsCategoryDialogOpen(true); }}><Edit className="w-4 h-4" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
                               if(confirm(`カテゴリー「${cat.name}」を削除しますか？`)) {
                                 firestore && deleteDocumentNonBlocking(doc(firestore, "categories", cat.id));
                               }
-                            }}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            }}><Trash2 className="w-4 h-4" /></Button>
                           </div>
                         </CardTitle>
-                        <CardDescription className="line-clamp-2">{cat.description}</CardDescription>
                       </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="announcements" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold">お知らせ管理</h3>
+                  <Button variant="outline" onClick={() => { setEditingAnnounce({ title: "", date: new Date().toISOString().split('T')[0], isActive: true }); setIsAnnounceDialogOpen(true); }} className="font-bold">
+                    <Plus className="w-4 h-4 mr-2" /> お知らせ作成
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {announcements?.map((ann) => (
+                    <Card key={ann.id} className={cn("transition-all", !ann.isActive && "opacity-60")}>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Badge variant={ann.isActive ? "default" : "outline"}>{ann.date}</Badge>
+                          <p className="font-bold">{ann.title}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingAnnounce(ann); setIsAnnounceDialogOpen(true); }}><Edit className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => {
+                            if(confirm("このお知らせを削除しますか？")) {
+                              firestore && deleteDocumentNonBlocking(doc(firestore, "announcements", ann.id));
+                            }
+                          }}><Trash2 className="w-4 h-4" /></Button>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -558,11 +538,34 @@ export default function SettingsPage() {
         </SidebarInset>
       </div>
 
+      {/* お知らせダイアログ */}
+      <Dialog open={isAnnounceDialogOpen} onOpenChange={setIsAnnounceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>お知らせ編集</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>タイトル</Label>
+              <Input value={editingAnnounce?.title || ""} onChange={(e) => setEditingAnnounce(prev => ({ ...prev!, title: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>日付</Label>
+              <Input type="date" value={editingAnnounce?.date || ""} onChange={(e) => setEditingAnnounce(prev => ({ ...prev!, date: e.target.value }))} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="announce-active" checked={editingAnnounce?.isActive ?? true} onCheckedChange={(val) => setEditingAnnounce(prev => ({ ...prev!, isActive: val }))} />
+              <Label htmlFor="announce-active">有効にする</Label>
+            </div>
+          </div>
+          <DialogFooter><Button onClick={handleSaveAnnounce} className="font-bold w-full sm:w-auto">保存</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>カテゴリー編集</DialogTitle>
-            <DialogDescription>カテゴリーの情報を入力してください。表示順は数字が小さいほど先に表示されます。</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -571,17 +574,10 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label>表示順</Label>
-              <Select 
-                value={editingCategory?.order?.toString() || "1"} 
-                onValueChange={(val) => setEditingCategory(prev => ({ ...prev!, order: parseInt(val) }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="表示順を選択" />
-                </SelectTrigger>
+              <Select value={editingCategory?.order?.toString() || "1"} onValueChange={(val) => setEditingCategory(prev => ({ ...prev!, order: parseInt(val) }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[180px]">
-                  {Array.from({ length: 20 }, (_, i) => (
-                    <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
-                  ))}
+                  {Array.from({ length: 20 }, (_, i) => (<SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
@@ -597,9 +593,7 @@ export default function SettingsPage() {
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
         <DialogContent className="max-w-[95vw] lg:max-w-6xl h-[90vh] flex flex-col p-0 overflow-hidden [&>button]:hidden">
           <DialogHeader className="px-6 py-4 border-b flex flex-row justify-between items-center bg-card">
-            <div>
-              <DialogTitle className="font-bold">記事編集</DialogTitle>
-            </div>
+            <DialogTitle className="font-bold">記事編集</DialogTitle>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => setIsManualDialogOpen(false)}>キャンセル</Button>
               <Button size="sm" onClick={handleSaveManual} className="font-bold"><Save className="w-4 h-4 mr-2" /> 保存して適用</Button>
@@ -617,26 +611,17 @@ export default function SettingsPage() {
                 <Card className="p-4 space-y-6">
                   <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">公開設定</Label>
-                    <RadioGroup 
-                      value={editingManual?.status} 
-                      onValueChange={(val) => setEditingManual(prev => ({ ...prev!, status: val as ManualStatus }))}
-                      className="grid gap-2"
-                    >
+                    <RadioGroup value={editingManual?.status} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, status: val as ManualStatus }))} className="grid gap-2">
                       <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors">
                         <RadioGroupItem value="published" id="published" />
-                        <Label htmlFor="published" className="flex-1 cursor-pointer font-bold flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-primary" /> 公開
-                        </Label>
+                        <Label htmlFor="published" className="flex-1 cursor-pointer font-bold flex items-center gap-2"><Eye className="w-4 h-4 text-primary" /> 公開</Label>
                       </div>
                       <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors">
                         <RadioGroupItem value="draft" id="draft" />
-                        <Label htmlFor="draft" className="flex-1 cursor-pointer font-bold flex items-center gap-2">
-                          <EyeOff className="w-4 h-4 text-muted-foreground" /> 下書き
-                        </Label>
+                        <Label htmlFor="draft" className="flex-1 cursor-pointer font-bold flex items-center gap-2"><EyeOff className="w-4 h-4 text-muted-foreground" /> 下書き</Label>
                       </div>
                     </RadioGroup>
                   </div>
-
                   <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">カテゴリー</Label>
                     <Select value={editingManual?.categoryId} onValueChange={(val) => setEditingManual(prev => ({ ...prev!, categoryId: val }))}>
@@ -644,7 +629,6 @@ export default function SettingsPage() {
                       <SelectContent>{sortedCategories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">サムネイル</Label>
                     <div className="aspect-video relative border rounded-xl overflow-hidden group cursor-pointer bg-muted" onClick={() => fileInputRef.current?.click()}>
@@ -652,28 +636,12 @@ export default function SettingsPage() {
                       <div className="absolute inset-0 bg-black/40 opacity-0 lg:group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
                         {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : "変更する"}
                       </div>
-                      {editingManual?.imageUrl && (
-                        <Button 
-                          variant="destructive" 
-                          size="icon" 
-                          className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg z-20"
-                          onClick={handleRemoveImage}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                   </div>
-
                   <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">概要</Label>
-                    <Textarea 
-                      value={editingManual?.description || ""} 
-                      onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))} 
-                      className="min-h-[100px] text-sm"
-                      placeholder="記事の簡単な説明を入力..."
-                    />
+                    <Textarea value={editingManual?.description || ""} onChange={(e) => setEditingManual(prev => ({ ...prev!, description: e.target.value }))} className="min-h-[100px] text-sm" placeholder="記事の簡単な説明を入力..." />
                   </div>
                 </Card>
               </div>
