@@ -6,10 +6,10 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Megaphone, Calendar, ChevronRight, Loader2, Lock } from "lucide-react";
+import { Megaphone, Calendar, ChevronRight, ChevronLeft, Loader2, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { BrandLogo } from "@/components/layout/brand-logo";
@@ -20,6 +20,7 @@ import { verifyAccessPassword } from "@/app/actions/admin-auth";
 
 const ACCESS_SESSION_KEY = "manualshare_access_session_v1";
 const SESSION_DURATION_MS = 30 * 60 * 1000;
+const ITEMS_PER_PAGE = 10;
 
 function AnnouncementsContent() {
   const { toast } = useToast();
@@ -27,6 +28,7 @@ function AnnouncementsContent() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const firestore = useFirestore();
 
@@ -68,13 +70,12 @@ function AnnouncementsContent() {
     setIsVerifying(false);
   };
 
-  // お知らせの取得（最大10件）
+  // お知らせの取得（ページネーションのために件数制限を外すか、十分に大きく取る）
   const announcementsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
       collection(firestore, "announcements"), 
-      orderBy("date", "desc"), 
-      limit(10)
+      orderBy("date", "desc")
     );
   }, [firestore]);
   const { data: announcements, isLoading } = useCollection(announcementsRef);
@@ -83,6 +84,18 @@ function AnnouncementsContent() {
     if (!announcements) return [];
     return announcements.filter(a => a.isActive !== false);
   }, [announcements]);
+
+  // ページネーションロジック
+  const totalPages = Math.ceil(activeAnnouncements.length / ITEMS_PER_PAGE);
+  const paginatedAnnouncements = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return activeAnnouncements.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [activeAnnouncements, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (isAuthenticated === null) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -131,8 +144,8 @@ function AnnouncementsContent() {
 
           <main className="flex-1 p-6 md:p-8 lg:p-10 max-w-4xl mx-auto w-full">
             <div className="mb-8">
-              <h2 className="text-2xl font-headline font-bold mb-2">最新の情報</h2>
-              <p className="text-muted-foreground">全社へ共有された最新の10件のお知らせを表示しています。</p>
+              <h2 className="text-2xl font-headline font-bold mb-2">すべてのお知らせ</h2>
+              <p className="text-muted-foreground">共有されたお知らせを日付順に表示しています。</p>
             </div>
 
             {isLoading ? (
@@ -140,26 +153,57 @@ function AnnouncementsContent() {
                 {[1, 2, 3].map(i => <Card key={i} className="h-20 animate-pulse bg-muted" />)}
               </div>
             ) : activeAnnouncements.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                {activeAnnouncements.map((ann) => (
-                  <Card 
-                    key={ann.id} 
-                    className="border shadow-sm hover:border-primary/50 transition-all cursor-pointer group bg-card"
-                    onClick={() => setSelectedAnnouncement(ann)}
-                  >
-                    <CardContent className="p-6 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-6 min-w-0 flex-1">
-                        <div className="bg-primary/10 px-3 py-1.5 rounded text-xs font-bold text-primary shrink-0 flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4" />
-                          {ann.date}
+              <>
+                <div className="grid grid-cols-1 gap-4">
+                  {paginatedAnnouncements.map((ann) => (
+                    <Card 
+                      key={ann.id} 
+                      className="border shadow-sm hover:border-primary/50 transition-all cursor-pointer group bg-card"
+                      onClick={() => setSelectedAnnouncement(ann)}
+                    >
+                      <CardContent className="p-6 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-6 min-w-0 flex-1">
+                          <div className="bg-primary/10 px-3 py-1.5 rounded text-xs font-bold text-primary shrink-0 flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4" />
+                            {ann.date}
+                          </div>
+                          <p className="font-bold text-lg truncate group-hover:text-primary transition-colors">{ann.title}</p>
                         </div>
-                        <p className="font-bold text-lg truncate group-hover:text-primary transition-colors">{ann.title}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* ページネーションコントロール */}
+                {totalPages > 1 && (
+                  <div className="mt-10 flex items-center justify-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="font-bold"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      前へ
+                    </Button>
+                    <div className="text-sm font-medium text-muted-foreground">
+                      {currentPage} / {totalPages} ページ
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="font-bold"
+                    >
+                      次へ
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed">
                 <Megaphone className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
