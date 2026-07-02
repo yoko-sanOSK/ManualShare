@@ -20,7 +20,7 @@ import { verifyAccessPassword } from "@/app/actions/admin-auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
 
 const ACCESS_SESSION_KEY = "manualshare_access_session_v1";
-const SESSION_DURATION_MS = 30 * 60 * 1000; // 30分に延長
+const SESSION_DURATION_MS = 30 * 60 * 1000; // 30分
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -55,16 +55,19 @@ function HomeContent() {
   }, [firestore]);
   const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
 
-  // お知らせの取得
+  // お知らせの取得（最新の最大3件を表示するために、念のため多めに取得してフィルタリング）
   const announcementsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "announcements"), orderBy("date", "desc"), limit(3));
+    return query(collection(firestore, "announcements"), orderBy("date", "desc"), limit(10));
   }, [firestore]);
   const { data: announcements } = useCollection(announcementsRef);
 
   const activeAnnouncements = useMemo(() => {
     if (!announcements) return [];
-    return announcements.filter(a => a.isActive !== false);
+    // 有効なものだけをフィルタリングし、最新の3件のみを抽出
+    return announcements
+      .filter(a => a.isActive !== false)
+      .slice(0, 3);
   }, [announcements]);
 
   // セッションのチェック
@@ -234,7 +237,7 @@ function HomeContent() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-card p-3 rounded-xl border border-border/50 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground shrink-0 pr-3 border-r border-border/50">
                   <Filter className="w-4 h-4 text-primary" />
-                  カテゴリー
+                  フィルター
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pl-1">
                   <Badge 

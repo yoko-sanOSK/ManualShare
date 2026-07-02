@@ -214,6 +214,11 @@ export default function SettingsPage() {
     );
   }, [sortedManuals, manualSearchQuery]);
 
+  const sortedAnnouncements = useMemo(() => {
+    if (!announcements) return [];
+    return [...announcements].sort((a, b) => b.date.localeCompare(a.date));
+  }, [announcements]);
+
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Partial<CategoryData> | null>(null);
 
@@ -512,7 +517,7 @@ export default function SettingsPage() {
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
-                  {announcements?.map((ann) => (
+                  {sortedAnnouncements?.map((ann) => (
                     <Card key={ann.id} className={cn("transition-all", !ann.isActive && "opacity-60")}>
                       <CardContent className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
