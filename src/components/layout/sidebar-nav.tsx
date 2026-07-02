@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Settings, HelpCircle, Tag, Layers } from "lucide-react";
+import { LayoutDashboard, Settings, HelpCircle, Tag, Layers, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
@@ -27,6 +27,7 @@ function MainMenu() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isDashboardActive = pathname === "/" && !searchParams.get('category');
+  const isAnnouncementsActive = pathname === "/announcements";
 
   return (
     <SidebarMenu>
@@ -35,6 +36,14 @@ function MainMenu() {
           <Link href="/">
             <LayoutDashboard />
             <span>ダッシュボード</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isAnnouncementsActive}>
+          <Link href="/announcements">
+            <Megaphone />
+            <span>お知らせ</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
