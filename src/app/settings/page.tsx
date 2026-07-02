@@ -512,7 +512,7 @@ export default function SettingsPage() {
               <TabsContent value="announcements" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold">お知らせ管理</h3>
-                  <Button variant="outline" onClick={() => { setEditingAnnounce({ title: "", date: new Date().toISOString().split('T')[0], isActive: true }); setIsAnnounceDialogOpen(true); }} className="font-bold">
+                  <Button variant="outline" onClick={() => { setEditingAnnounce({ title: "", content: "", date: new Date().toISOString().split('T')[0], isActive: true }); setIsAnnounceDialogOpen(true); }} className="font-bold">
                     <Plus className="w-4 h-4 mr-2" /> お知らせ作成
                   </Button>
                 </div>
@@ -552,15 +552,19 @@ export default function SettingsPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>タイトル</Label>
-              <Input value={editingAnnounce?.title || ""} onChange={(e) => setEditingAnnounce(prev => ({ ...prev!, title: e.target.value }))} />
+              <Input value={editingAnnounce?.title || ""} onChange={(e) => setEditingAnnounce(prev => ({ ...prev!, title: e.target.value }))} placeholder="お知らせのタイトル" />
+            </div>
+            <div className="space-y-2">
+              <Label>本文</Label>
+              <Textarea value={editingAnnounce?.content || ""} onChange={(e) => setEditingAnnounce(prev => ({ ...prev!, content: e.target.value }))} className="min-h-[150px]" placeholder="お知らせの詳細内容を入力してください" />
             </div>
             <div className="space-y-2">
               <Label>日付</Label>
               <Input type="date" value={editingAnnounce?.date || ""} onChange={(e) => setEditingAnnounce(prev => ({ ...prev!, date: e.target.value }))} />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pt-2">
               <Switch id="announce-active" checked={editingAnnounce?.isActive ?? true} onCheckedChange={(val) => setEditingAnnounce(prev => ({ ...prev!, isActive: val }))} />
-              <Label htmlFor="announce-active">有効にする</Label>
+              <Label htmlFor="announce-active">有効にする（ホーム画面に表示）</Label>
             </div>
           </div>
           <DialogFooter><Button onClick={handleSaveAnnounce} className="font-bold w-full sm:w-auto">保存</Button></DialogFooter>

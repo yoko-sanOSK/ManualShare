@@ -7,7 +7,7 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Footer } from "@/components/layout/footer";
 import { ManualCard } from "@/components/manual/manual-card";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, BookOpen, Loader2, Lock, Megaphone, Calendar } from "lucide-react";
+import { Search, Filter, BookOpen, Loader2, Lock, Megaphone, Calendar, ChevronRight } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { verifyAccessPassword } from "@/app/actions/admin-auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const ACCESS_SESSION_KEY = "manualshare_access_session_v1";
 const SESSION_DURATION_MS = 30 * 60 * 1000; // 30分
@@ -35,6 +36,9 @@ function HomeContent() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+
+  // お知らせ詳細ステート
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<any>(null);
 
   const firestore = useFirestore();
   
@@ -55,7 +59,7 @@ function HomeContent() {
   }, [firestore]);
   const { data: manuals, isLoading: manualsLoading } = useCollection(manualsRef);
 
-  // お知らせの取得（最新の最大3件を表示するために、念のため多めに取得してフィルタリング）
+  // お知らせの取得
   const announcementsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "announcements"), orderBy("date", "desc"), limit(10));
@@ -64,7 +68,6 @@ function HomeContent() {
 
   const activeAnnouncements = useMemo(() => {
     if (!announcements) return [];
-    // 有効なものだけをフィルタリングし、最新の3件のみを抽出
     return announcements
       .filter(a => a.isActive !== false)
       .slice(0, 3);
@@ -207,15 +210,20 @@ function HomeContent() {
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                   {activeAnnouncements.map((ann) => (
-                    <Card key={ann.id} className="border-none shadow-sm bg-primary/5 hover:bg-primary/10 transition-colors">
+                    <Card 
+                      key={ann.id} 
+                      className="border-none shadow-sm bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
+                      onClick={() => setSelectedAnnouncement(ann)}
+                    >
                       <CardContent className="p-4 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
                           <div className="bg-primary/10 px-2 py-1 rounded text-[10px] font-bold text-primary shrink-0 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {ann.date}
                           </div>
-                          <p className="font-medium text-sm truncate">{ann.title}</p>
+                          <p className="font-bold text-sm truncate group-hover:text-primary transition-colors">{ann.title}</p>
                         </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </CardContent>
                     </Card>
                   ))}
@@ -237,7 +245,7 @@ function HomeContent() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-card p-3 rounded-xl border border-border/50 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground shrink-0 pr-3 border-r border-border/50">
                   <Filter className="w-4 h-4 text-primary" />
-                  フィルター
+                  カテゴリー
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pl-1">
                   <Badge 
@@ -286,6 +294,31 @@ function HomeContent() {
           <Footer />
         </SidebarInset>
       </div>
+
+      {/* お知らせ詳細ダイアログ */}
+      <Dialog open={!!selectedAnnouncement} onOpenChange={(open) => !open && setSelectedAnnouncement(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="text-[10px] font-bold py-0 h-5">
+                {selectedAnnouncement?.date}
+              </Badge>
+              <span className="text-[10px] text-muted-foreground font-medium">お知らせ</span>
+            </div>
+            <DialogTitle className="text-2xl font-headline font-bold text-foreground">
+              {selectedAnnouncement?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="text-foreground leading-relaxed whitespace-pre-wrap">
+              {selectedAnnouncement?.content || "内容はありません。"}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedAnnouncement(null)}>閉じる</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
